@@ -1,0 +1,22 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using SXG2025;
+
+namespace #SCRIPTNAME#
+{
+	public class #SCRIPTNAME# : ComPlayerBase
+	{
+		private void Start()
+		{
+
+		}
+
+		private void Update()
+		{
+			// コントローラ操作の検証用コードです
+			// 動作検証が終わったらコメントアウトしてください
+			SXG_TestPlayByGamepad();
+		}
+	}
+}

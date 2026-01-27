@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c4c446dad1c8a44bac96ffc92ce97fc, type: 3}
+  m_Name: DataGame
+  m_EditorClassIdentifier: 
+  m_invincibleTimeAfterSpawn: 3
+  m_maxInvinsibleShieldRadius: 15
+  m_minInvinsibleShieldRadius: 6
+  m_survivedBonusScore: 200
+  m_hitSinkDepthOfColumn: -0.5

@@ -1,0 +1,57 @@
+﻿#region FIRE
+
+        [Header("<Fire>")]
+        [SerializeField] float m_fireInterval = 0.2f;       // 1基ずつの砲台の射撃インターバル
+
+        [SerializeField] bool m_dontFireNearEdge = false;   // 外周付近では反動による落下を恐れて射撃しない
+        [SerializeField] bool m_dontFireWhenUnstable = false;   // 戦車本体の姿勢が悪いときは射撃しない
+
+        private int m_nextTurretId = 0;
+        private float m_fireIntervalTime = 0;
+
+
+        void DoFire()
+        { 
+            m_fireIntervalTime += Time.deltaTime;
+
+            // 安定している時だけ撃つ？ 
+            if (m_dontFireWhenUnstable)
+            {
+                if (transform.up.y < 0.9f)
+                {
+                    return;
+                }
+            }
+
+            // 落下間近なら打たない？ 
+            if (m_dontFireWhenUnstable)
+            {
+                float distanceFromCenter = new Vector3(m_nowPosition.x, 0, m_nowPosition.z).magnitude;
+                if (GameConstants.ABOUT_GAME_FIELD_RADIUS * 0.9f < distanceFromCenter)
+                {
+                    return;
+                }
+            }
+
+            // インターバル確認 
+            if (m_fireIntervalTime < m_fireInterval)
+            {
+                return;
+            }
+
+            // 撃てるなら全て撃つ
+            for (int i=0; i < m_turretCount; ++i)
+            {
+                int turretNo = (m_nextTurretId + i) % m_turretCount;
+
+                if (SXG_CanShoot(turretNo))
+                {
+                    SXG_Shoot(turretNo);
+                    m_nextTurretId = turretNo;
+                    m_fireIntervalTime = 0;
+                    break;
+                }
+            }
+        }
+
+#endregion

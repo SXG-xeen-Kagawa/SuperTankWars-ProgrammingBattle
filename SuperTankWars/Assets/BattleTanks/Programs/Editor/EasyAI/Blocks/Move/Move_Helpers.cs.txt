@@ -1,0 +1,159 @@
+﻿#region MOVE_Helpers
+
+        /// <summary>
+        /// 操舵：ワールド方向ベクトルへ向ける
+        /// </summary>
+        void SetCaterpillarTowardWorldDir(Quaternion tankRot, Vector3 desireDir, float forwardPower)
+        {
+            Vector3 front = tankRot * Vector3.forward;
+            front.y = 0;
+            front.Normalize();
+
+            desireDir.y = 0;
+            desireDir.Normalize();
+
+            float dot = Vector3.Dot(front, desireDir);
+            float crossY = Vector3.Cross(front, desireDir).y;   // 左右判定 
+
+            // ざっくり旋回 
+            float turn = Mathf.Clamp(crossY * 1.4f, -1.0f, +1.0f);
+
+            float basePower = 0;
+            if (0.5f < dot)
+            {
+                basePower = forwardPower;   // だいたい前を向いている
+            }
+            else if (dot < -0.5f)
+            {
+                basePower = -forwardPower;  // ほぼ反対を向いているので後退 
+            }
+            else
+            {
+                basePower = 0.2f;       // 旋回時は少し前進
+            }
+
+            // 左右のキャタピラの力 
+            float left = Mathf.Clamp(basePower - turn, -1.0f, +1.0f);
+            float right = Mathf.Clamp(basePower + turn, -1.0f, +1.0f);
+            SXG_SetCaterpillarPower(left, right);
+        }
+
+        /// <summary>
+        /// 最も近い戦車のIDを取得 
+        /// </summary>
+        /// <returns></returns>
+        int FindTankIdWithMinDistance()
+        {
+            int nearestId = 0;
+            float distance = float.MaxValue;
+
+            for (int i=1; i < m_allTanksInfo.Length; ++i)
+            {
+                var tankInfo = m_allTanksInfo[i];
+                if (tankInfo.IsDefeated) continue;  // 敗退済みは対象にしない
+                Vector3 diff = tankInfo.Position - m_nowPosition;
+                float d = diff.magnitude;
+                if (d < distance)
+                {
+                    nearestId = i;
+                    distance = d;
+                }
+            }
+            return nearestId;
+        }
+
+        /// <summary>
+        /// 残りエナジーが一番多い戦車のIDを取得 
+        /// </summary>
+        /// <returns></returns>
+        int FindTankIdWithMaxEnergy()
+        {
+            int id = 0;
+            int maxEnergy = 0;
+
+            for (int i = 1; i < m_allTanksInfo.Length; ++i)
+            {
+                var tankInfo = m_allTanksInfo[i];
+                if (tankInfo.IsDefeated) continue;  // 敗退済みは対象にしない 
+                if (maxEnergy < tankInfo.Energy)
+                {
+                    id = i;
+                    maxEnergy = tankInfo.Energy;
+                }
+            }
+            return id;
+        }
+
+        /// <summary>
+        /// 残りエナジーが一番少ない戦車のIDを取得 
+        /// </summary>
+        /// <returns></returns>
+        int FindTankIdWithMinEnergy()
+        {
+            int id = 0;
+            int minEnergy = int.MaxValue;
+
+            for (int i = 1; i < m_allTanksInfo.Length; ++i)
+            {
+                var tankInfo = m_allTanksInfo[i];
+                if (tankInfo.IsDefeated) continue;  // 敗退済みは対象にしない 
+                if (tankInfo.Energy < minEnergy)
+                {
+                    id = i;
+                    minEnergy = tankInfo.Energy;
+                }
+            }
+            return id;
+        }
+
+        /// <summary>
+        /// 正面に近い戦車を探す 
+        /// </summary>
+        /// <returns></returns>
+        int FindTankIdInFront()
+        {
+            int id = 0;
+            float maxDotProduct = 0.0f;
+
+            for (int i=1; i < m_allTanksInfo.Length; ++i)
+            {
+                var tankInfo = m_allTanksInfo[i];
+                if (tankInfo.IsDefeated) continue;  // 敗退済みは対象にしない 
+
+                var toTank = (tankInfo.Position - m_nowPosition).normalized;
+                float dotProduct = Vector3.Dot(transform.forward, toTank);
+                if (maxDotProduct < dotProduct)
+                {
+                    id = i;
+                    maxDotProduct = dotProduct;
+                }
+            }
+            return id;
+        }
+
+        /// <summary>
+        /// 背面に近い戦車を探す 
+        /// </summary>
+        /// <returns></returns>
+        int FindTankIdBehind()
+        {
+            int id = 0;
+            float minDotProduct = 0.0f;
+
+            for (int i = 1; i < m_allTanksInfo.Length; ++i)
+            {
+                var tankInfo = m_allTanksInfo[i];
+                if (tankInfo.IsDefeated) continue;  // 敗退済みは対象にしない 
+
+                var toTank = (tankInfo.Position - m_nowPosition).normalized;
+                float dotProduct = Vector3.Dot(transform.forward, toTank);
+                if (dotProduct < minDotProduct)
+                {
+                    id = i;
+                    minDotProduct = dotProduct;
+                }
+            }
+            return id;
+        }
+
+#endregion

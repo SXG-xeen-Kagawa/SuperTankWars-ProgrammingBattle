@@ -1,0 +1,16 @@
+{
+    "name": "Participant",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f159dd3126121f84a858beb0aed01226"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

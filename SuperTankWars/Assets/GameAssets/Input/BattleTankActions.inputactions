@@ -1,0 +1,56 @@
+{
+    "name": "BattleTankActions",
+    "maps": [
+        {
+            "name": "Player",
+            "id": "5a3f5121-a89f-4f79-a68b-61907854a701",
+            "actions": [
+                {
+                    "name": "Decide",
+                    "type": "Button",
+                    "id": "fb3c9502-43b6-44e8-a2de-dd1e288585e1",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "5a4aa519-995e-437e-a9c9-834e9d128d7d",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Decide",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "dc92f4ed-1bdf-49e3-8933-ce65fa90395d",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Decide",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b4c21631-0c10-4f02-bda2-89d917273f07",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Decide",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

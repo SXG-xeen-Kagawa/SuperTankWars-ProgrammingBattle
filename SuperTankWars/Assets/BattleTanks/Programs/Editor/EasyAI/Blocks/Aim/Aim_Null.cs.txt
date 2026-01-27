@@ -1,0 +1,10 @@
+﻿#region AIM
+
+        /// <summary>
+        /// 射撃処理 
+        /// </summary>
+        void DoAim()
+        {
+        }
+
+#endregion

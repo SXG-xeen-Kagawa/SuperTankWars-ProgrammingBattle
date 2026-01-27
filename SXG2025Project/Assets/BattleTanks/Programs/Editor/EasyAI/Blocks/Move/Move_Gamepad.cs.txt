@@ -1,9 +1,0 @@
-﻿#region MOVE
-
-        void DoMove()
-        {
-            // テストプレイ用：ゲームパッドで操作する 
-            SXG_TestPlayByGamepad();
-        }
-
-#endregion
