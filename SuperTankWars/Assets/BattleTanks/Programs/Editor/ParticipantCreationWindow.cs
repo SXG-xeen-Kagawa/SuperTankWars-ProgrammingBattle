@@ -280,6 +280,8 @@ namespace SXG2025
                 var prefabPath = $"{folderPath}/{name}.prefab";
                 PrefabUtility.SaveAsPrefabAsset(contentsRoot, prefabPath);
 
+                PrefabUtility.UnloadPrefabContents(contentsRoot);
+
                 AssetDatabase.Refresh();
 
                 EditorApplication.delayCall = () =>
@@ -297,6 +299,23 @@ namespace SXG2025
                     Selection.activeObject = prefabAsset;
                     EditorGUIUtility.PingObject(prefabAsset);
 
+                    // 生成フォルダをProjectで開く 
+                    var folderAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(folderPath);
+                    if (folderAsset != null)
+                    {
+                        // フォルダを開く 
+                        EditorUtility.FocusProjectWindow();
+                        ProjectWindowUtil.ShowCreatedAsset(prefabAsset);
+
+                        // Prefabを選び直す 
+                        Selection.activeObject = prefabAsset;
+                        EditorGUIUtility.PingObject(prefabAsset);
+                    }
+
+                    // プレハブを開いてあげる 
+                    AssetDatabase.OpenAsset(prefabAsset);
+
+                    // 確認ダイアログ表示 
                     if (Data.instance.entryMethod == EntryMethod.Connpass)
                     {
                         EditorUtility.DisplayDialog("挑戦者登録",
@@ -306,6 +325,16 @@ namespace SXG2025
                         EditorUtility.DisplayDialog("挑戦者登録",
                             $"参加ID:{Data.instance.randomID} のAIを登録しました。\n{folderPath}", "OK");
                     }
+
+                    // ダイアログ閉じたらウインドウも閉じる(1フレーム後)
+                    EditorApplication.delayCall += () =>
+                    {
+                        var window = Resources.FindObjectsOfTypeAll<ParticipantCreationWindow>();
+                        foreach (var win in window)
+                        {
+                            win.Close();
+                        }
+                    };
                 };
             }
             catch

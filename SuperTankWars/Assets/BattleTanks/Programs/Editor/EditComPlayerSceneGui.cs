@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace SXG2025
 {
@@ -46,6 +47,21 @@ namespace SXG2025
 
         static List<GameObject> m_errorObjectList = new();
 
+        static Rect m_panelRect = new Rect(50, 10, 380, 0);
+        static bool m_isDraggingPanel = false;
+        static Vector2 m_dragStartMouse;
+        static Vector2 m_dragStartPos;
+
+        static bool m_showGuide = false;   // おすすめ手順（デフォルト閉）
+        static bool m_showEasyAI = false;  // AI（慣れてきたら）
+        static bool m_showSubmission = false;
+
+        static Vector2 m_panelScroll;
+
+        static GUIStyle m_costLabelStyle;
+        static GUIStyle m_costValueStyle;
+        static GUIStyle m_costValueWarningStyle;
+
 
 
         static EditComPlayerSceneGui()
@@ -81,6 +97,26 @@ namespace SXG2025
                 m_easyEditButtonStyle.alignment = TextAnchor.MiddleCenter;
                 m_easyEditButtonStyle.wordWrap = true;
                 m_easyEditButtonStyle.padding = new RectOffset(6, 6, 2, 2);
+            }
+
+            // --- Cost強調表示用スタイル ---
+            if (m_costLabelStyle == null)
+            {
+                m_costLabelStyle = new GUIStyle(EditorStyles.label);
+                m_costLabelStyle.fontStyle = FontStyle.Bold;
+            }
+
+            if (m_costValueStyle == null)
+            {
+                m_costValueStyle = new GUIStyle(EditorStyles.label);
+                m_costValueStyle.fontStyle = FontStyle.Bold;
+                m_costValueStyle.fontSize = 14;
+            }
+
+            if (m_costValueWarningStyle == null)
+            {
+                m_costValueWarningStyle = new GUIStyle(m_costValueStyle);
+                m_costValueWarningStyle.normal.textColor = new Color(1f, 0.35f, 0.35f);
             }
 
             // アイコン付きラベル 
@@ -120,107 +156,240 @@ namespace SXG2025
                 m_lastRecalcTime = EditorApplication.timeSinceStartup;
             }
 
-            // 見出し 
-            Handles.BeginGUI();
-            //GUILayout.BeginArea(new Rect(50, 10, 400, 128), GUI.skin.box);
-            GUILayout.BeginArea(new Rect(50, 10, 420, 240), GUI.skin.box);
-            GUILayout.Label("＜戦車Prefab編集モード＞", EditorStyles.boldLabel);
-            GUILayout.Space(5);
+            {
+                Handles.BeginGUI();
 
-            // コスト 
-            bool isCostOver = false;
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Cost:", GUILayout.Width(40));
-            if (m_lastCost <= GameConstants.DEFAULT_PLAYER_ENERGY)
-            {
-                GUILayout.Label(m_lastCost.ToString(), m_valueStyle, GUILayout.Width(40));
-            } else
-            {
-                GUILayout.Label(m_lastCost.ToString(), m_warningValueStyle, GUILayout.Width(40));
-                isCostOver = true;
-            }
-            GUILayout.Label("出撃可能回数:");
-            if (0 < m_lastCost)
-            {
-                GUILayout.Label((GameConstants.DEFAULT_PLAYER_ENERGY/m_lastCost).ToString(), GUILayout.Width(40));
-            }
-            if (isCostOver)
-            {
-                GUILayout.Label("  COST OVER!!!", m_warningValueStyle);
-            }
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+                // 画面サイズに合わせてパネルの最大幅を制限（邪魔になりにくい）
+                float maxWidth = Mathf.Min(420f, sv.position.width * 0.85f);
+                m_panelRect.width = maxWidth;
+                m_panelRect.height = 240.0f;
 
-            // 追加情報 
-            GUILayout.Label(string.Format("砲塔数:{0}基 / 回転部位:{1}基 / 装備数:{2}基 / 戦車質量:{3}Kg",
-                m_countOfTurrets, m_countOfRotators, m_countOfArmors, m_tankMass));
+                // 枠（重いGUI.skin.boxより軽いスタイルに寄せる）
+                var panelStyle = new GUIStyle(EditorStyles.helpBox);
+                panelStyle.padding = new RectOffset(10, 10, 8, 8);
 
-            // 砲塔追加ボタン 
-            GUILayout.Space(6);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("砲塔追加", GUILayout.Width(100)))
-            {
-                CompactArray(comPlayer);
-                TryAddTurretToTankInPrefabStage(comPlayer, stage);
-            }
-            if (GUILayout.Button("回転部位追加", GUILayout.Width(100)))
-            {
-                CompactArray(comPlayer);
-                TryAddRotatorToTankInPrefabStage(comPlayer, stage);
-            }
-            GUILayout.EndHorizontal();
+                // 先にArea開始
+                GUILayout.BeginArea(m_panelRect, panelStyle);
+                m_panelScroll = GUILayout.BeginScrollView(m_panelScroll, false, true);
 
-            // チェック 
-            GUILayout.Space(6);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("要素チェック", GUILayout.Width(100)))
-            {
-                bool isUpdate = false;
-                if (comPlayer.transform.localPosition != Vector3.zero || comPlayer.transform.localRotation != Quaternion.identity)
+                //------------------------------
+                // ヘッダー（ドラッグ＆最小化）
+                //------------------------------
+                using (new GUILayout.HorizontalScope())
                 {
-                    comPlayer.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-                    EditorUtility.SetDirty(comPlayer);
-                    isUpdate = true;
+                    GUILayout.Label("＜戦車Prefab編集モード＞", EditorStyles.boldLabel);
+
+                    GUILayout.FlexibleSpace();
+
                 }
-                if (CompactArray(comPlayer))
+
+                // ヘッダー行でドラッグ移動できるようにする
+                // ※BeginArea内なので、最後にrectを更新する方式が安定します
+                Rect headerRect = GUILayoutUtility.GetLastRect();
+                headerRect.x = 0;
+                headerRect.width = m_panelRect.width;
+
+                var e = Event.current;
+                if (e.type == EventType.MouseDown && e.button == 0 && headerRect.Contains(e.mousePosition))
                 {
-                    isUpdate = true;
+                    m_isDraggingPanel = true;
+                    m_dragStartMouse = e.mousePosition;
+                    m_dragStartPos = new Vector2(m_panelRect.x, m_panelRect.y);
+                    e.Use();
                 }
-                if (isUpdate)
+                else if (e.type == EventType.MouseDrag && m_isDraggingPanel)
                 {
-                    // Prefab Stage のシーンをDirtyにする 
-                    EditorSceneManager.MarkSceneDirty(stage.scene);
+                    Vector2 delta = e.mousePosition - m_dragStartMouse;
+                    m_panelRect.position = m_dragStartPos + delta;
+
+                    // 画面外に飛ばないように軽くクランプ
+                    m_panelRect.x = Mathf.Clamp(m_panelRect.x, 0, sv.position.width - m_panelRect.width);
+                    m_panelRect.y = Mathf.Clamp(m_panelRect.y, 0, sv.position.height - 40);
+
+                    sv.Repaint();
+                    e.Use();
                 }
-            }
-            if (GUILayout.Button("コリジョン表示", GUILayout.Width(100)))
-            {
-                m_showCollision = !m_showCollision;
-                SceneView.RepaintAll();
-            }
-            GUILayout.EndHorizontal();
-
-            // ------ 危険操作 ------
-            {
-                GUILayout.Space(20);
-                GUILayout.Label("■初心者向け：かんたんAI作成", EditorStyles.boldLabel);
-                EditorGUILayout.HelpBox(
-                    "ボタンを押すと、選ぶだけでAIの動きを組み立てられる編集画面を開きます。\n"
-                    + "※編集画面で「適用」を行うと、現在のAIスクリプトは上書きされます。",
-                    MessageType.Info);
-
-                var oldBg = GUI.backgroundColor;
-                GUI.backgroundColor = new Color(1, 0.85f, 0.35f, 1.0f);
-                if (GUILayout.Button(m_easyEditButtonContent, m_easyEditButtonStyle, GUILayout.Width(180)))
+                else if (e.type == EventType.MouseUp)
                 {
-                    EasyProgramEditorWindow.Open(comPlayer);
+                    m_isDraggingPanel = false;
                 }
-                GUI.backgroundColor = oldBg;
+
+
+                GUILayout.Space(6);
+
+                //--------------------------------------------------
+                // 状態：Cost / 出撃回数（強調版）
+                //--------------------------------------------------
+                bool isCostOver = false;
+
+                using (new GUILayout.HorizontalScope())
+                {
+                    GUILayout.Label("Cost:", m_costLabelStyle, GUILayout.Width(40));
+
+                    if (m_lastCost <= GameConstants.DEFAULT_PLAYER_ENERGY)
+                    {
+                        GUILayout.Label(m_lastCost.ToString(), m_costValueStyle, GUILayout.Width(54));
+                    }
+                    else
+                    {
+                        GUILayout.Label(m_lastCost.ToString(), m_costValueWarningStyle, GUILayout.Width(54));
+                        isCostOver = true;
+                    }
+
+                    GUILayout.Space(10);
+
+                    GUILayout.Label("出撃回数:", m_costLabelStyle, GUILayout.Width(58));
+                    if (0 < m_lastCost)
+                    {
+                        GUILayout.Label((GameConstants.DEFAULT_PLAYER_ENERGY / m_lastCost).ToString(), m_costValueStyle, GUILayout.Width(32));
+                    }
+                    else
+                    {
+                        GUILayout.Label("-", m_costValueStyle, GUILayout.Width(32));
+                    }
+
+                    if (isCostOver)
+                    {
+                        GUILayout.Space(8);
+                        GUILayout.Label("COST OVER", m_costValueWarningStyle);
+                    }
+
+                    GUILayout.FlexibleSpace();
+                }
+
+                GUILayout.Label(string.Format("砲塔:{0} / 回転:{1} / 装備:{2} / 質量:{3}Kg",
+                    m_countOfTurrets, m_countOfRotators, m_countOfArmors, m_tankMass));
+
+                GUILayout.Space(6);
+
+                //--------------------------------------------------
+                // おすすめ手順（デフォルト閉：邪魔になりやすいので）
+                //--------------------------------------------------
+                m_showGuide = EditorGUILayout.Foldout(m_showGuide, "おすすめ手順", true);
+                if (m_showGuide)
+                {
+                    EditorGUILayout.HelpBox(
+                        "① 砲塔を追加して位置を調整します\n" +
+                        "② 装甲などで見た目を整えます\n" +
+                        "③ ▶ 再生して動かしてみます（ゲームパッド操作）\n" +
+                        "④ ①〜③を繰り返して調整します\n" +
+                        "⑤ AI（戦い方）を調整します",
+                        MessageType.None);
+                }
+
+                GUILayout.Space(4);
+
+                //--------------------------------------------------
+                // 作る（砲塔・回転部位）
+                //--------------------------------------------------
+                GUILayout.Label("作る（砲塔・装甲・回転部位）", EditorStyles.boldLabel);
+                using (new GUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("砲塔追加", GUILayout.Width(108)))
+                    {
+                        CompactArray(comPlayer);
+                        TryAddTurretToTankInPrefabStage(comPlayer, stage);
+                    }
+                    if (GUILayout.Button("装甲(Cube)追加", GUILayout.Width(108)))
+                    {
+                        TryAddArmorCubeToTankInPrefabStage(comPlayer, stage);
+                    }
+                    if (GUILayout.Button("回転部位追加", GUILayout.Width(108)))
+                    {
+                        CompactArray(comPlayer);
+                        TryAddRotatorToTankInPrefabStage(comPlayer, stage);
+                    }
+                    GUILayout.FlexibleSpace();
+                }
+
+                GUILayout.Space(4);
+
+                //--------------------------------------------------
+                // 整える（チェック）
+                //--------------------------------------------------
+                GUILayout.Label("整える（チェック）", EditorStyles.boldLabel);
+                using (new GUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("要素チェック", GUILayout.Width(92)))
+                    {
+                        bool isUpdate = false;
+
+                        if (comPlayer.transform.localPosition != Vector3.zero || comPlayer.transform.localRotation != Quaternion.identity)
+                        {
+                            comPlayer.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                            EditorUtility.SetDirty(comPlayer);
+                            isUpdate = true;
+                        }
+
+                        if (CompactArray(comPlayer))
+                        {
+                            isUpdate = true;
+                        }
+
+                        if (isUpdate)
+                        {
+                            EditorSceneManager.MarkSceneDirty(stage.scene);
+                        }
+                    }
+
+                    string collisionBtn = m_showCollision ? "コリジョン非表示" : "コリジョン表示";
+                    if (GUILayout.Button(collisionBtn, GUILayout.Width(120)))
+                    {
+                        m_showCollision = !m_showCollision;
+                        SceneView.RepaintAll();
+                    }
+
+                    GUILayout.FlexibleSpace();
+                }
+
+                // Save案内は “常時HelpBox” だと面積を食うので、短いLabelに
+                GUILayout.Label("※変更後は右上の「Save」で保存します。", EditorStyles.miniLabel);
+
+                GUILayout.Space(6);
+
+                //--------------------------------------------------
+                // AI（慣れてきたら）
+                //--------------------------------------------------
+                m_showEasyAI = EditorGUILayout.Foldout(m_showEasyAI, "AI（戦い方）を調整する", true);
+                if (m_showEasyAI)
+                {
+                    EditorGUILayout.HelpBox(
+                        "プログラムが苦手な人でも、選ぶだけで戦い方（AI）を調整できます。\n" +
+                        "プログラムのアイデアが欲しい人にもおすすめです。\n" +
+                        "※上書きは編集画面の「適用」を押したときです（開くだけでは変わりません）。",
+                        MessageType.Info);
+
+                    if (GUILayout.Button(m_easyEditButtonContent, GUILayout.Height(24), GUILayout.Width(220)))
+                    {
+                        EasyProgramEditorWindow.Open(comPlayer);
+                    }
+                }
+
+
+                //--------------------------------------------------
+                // 提出用出力
+                //--------------------------------------------------
+                GUILayout.Space(8);
+                m_showSubmission = EditorGUILayout.Foldout(m_showSubmission, "提出（ZIP出力）", true);
+                if (m_showSubmission)
+                {
+                    EditorGUILayout.HelpBox(
+                        "この戦車のフォルダを提出用ZIPにまとめます。\n" +
+                        "※デスクトップに出力します（Backupは含めません）。",
+                        MessageType.None);
+
+                    if (GUILayout.Button("提出用ZIPを作成", GUILayout.Width(160)))
+                    {
+                        TryCreateSubmissionZipFromCurrentPrefabStage(stage);
+                    }
+                }
+
+                // Area終了
+                GUILayout.EndScrollView();
+                GUILayout.EndArea();
+
+                Handles.EndGUI();
             }
-
-
-            // 終了 
-            GUILayout.EndArea();
-            Handles.EndGUI();
 
 
             // エラーオブジェクト 
@@ -755,6 +924,133 @@ namespace SXG2025
 
         #endregion
 
+
+
+        const string EditorPrefsKey_EasyAI_FirstConfirmShown = "SXG2025.EasyAI.FirstConfirmShown";
+
+        static bool ConfirmOpenEasyAIIfFirstTime()
+        {
+            // 既に表示済みなら確認なしで通す
+            if (EditorPrefs.GetBool(EditorPrefsKey_EasyAI_FirstConfirmShown, false))
+                return true;
+
+            // 初回だけ表示（軽め・誤解防止）
+            bool ok = EditorUtility.DisplayDialog(
+                "かんたんAI作成（確認）",
+                "この編集画面では、選ぶだけでAI（戦い方）を作れます。\n\n" +
+                "※AIスクリプトが上書きされるのは「適用」を押したときです。\n" +
+                "（開くだけでは上書きされません）",
+                "開く",
+                "キャンセル"
+            );
+
+            if (ok)
+            {
+                EditorPrefs.SetBool(EditorPrefsKey_EasyAI_FirstConfirmShown, true);
+            }
+
+            return ok;
+        }
+
+
+
+        const string ArmorNamePrefix = "Armor_";
+
+        static void TryAddArmorCubeToTankInPrefabStage(ComPlayerBase comPlayer, PrefabStage stage)
+        {
+            if (comPlayer == null) return;
+
+            if (stage == null)
+            {
+                EditorUtility.DisplayDialog("Error", "Prefab 編集画面が開かれていません。", "OK");
+                return;
+            }
+
+            // Unity標準のCube生成（1x1x1 + BoxCollider）
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            if (go == null) return;
+
+            Undo.RegisterCreatedObjectUndo(go, "Create Armor Cube");
+
+            // 親をタンクにする（PrefabStage内の編集なのでOK）
+            go.transform.SetParent(comPlayer.transform, false);
+
+            // 初期位置（指定）
+            go.transform.localPosition = new Vector3(0f, 0.5f, 2f);
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one;
+
+            // 命名（Armor_01, Armor_02...）
+            int serial = GetNextTwoDigitSerialUnder(comPlayer.transform, ArmorNamePrefix);
+            go.name = $"{ArmorNamePrefix}{serial:00}";
+
+            // Prefab Stage のシーンをDirtyにする
+            EditorSceneManager.MarkSceneDirty(stage.scene);
+
+            // 選択状態にしてすぐ編集できるようにする
+            Selection.activeGameObject = go;
+            EditorGUIUtility.PingObject(go);
+
+            Debug.Log("装甲（Cube）を追加しました。位置・大きさを調整し、右上のSaveで保存してください。");
+        }
+
+
+        static bool TryGetParticipantFolderPathFromPrefabStage(PrefabStage stage, out string participantFolderAssetPath)
+        {
+            participantFolderAssetPath = null;
+            if (stage == null) return false;
+
+            // stage.assetPath は Prefabのアセットパス
+            // 例：Assets/Participant/Player1234567 - 神谷/Player1234567.prefab
+            string prefabAssetPath = stage.assetPath;
+            if (string.IsNullOrEmpty(prefabAssetPath)) return false;
+
+            prefabAssetPath = prefabAssetPath.Replace("\\", "/");
+            participantFolderAssetPath = Path.GetDirectoryName(prefabAssetPath)?.Replace("\\", "/");
+            return !string.IsNullOrEmpty(participantFolderAssetPath);
+        }
+
+        static void TryCreateSubmissionZipFromCurrentPrefabStage(PrefabStage stage)
+        {
+            if (!TryGetParticipantFolderPathFromPrefabStage(stage, out var folderAssetPath))
+            {
+                EditorUtility.DisplayDialog("挑戦者出力", "参加者フォルダを特定できませんでした。", "OK");
+                return;
+            }
+
+            // 念のため確認（軽め）
+            bool ok = EditorUtility.DisplayDialog(
+                "挑戦者出力",
+                $"このフォルダを提出用にZIP圧縮します。\n\n{folderAssetPath}\n\nよろしいですか？",
+                "ZIP作成",
+                "キャンセル"
+            );
+            if (!ok) return;
+
+            try
+            {
+                if (ParticipantSubmissionContextMenu.TryCreateZipFromParticipantFolder(folderAssetPath, out var zipFullPath, reveal: true))
+                {
+                    EditorUtility.DisplayDialog("挑戦者出力", $"提出用ZIPを作成しました。\n{zipFullPath}", "OK");
+                }
+                else
+                {
+                    EditorUtility.DisplayDialog(
+                        "挑戦者出力",
+                        "このPrefabは参加者フォルダ（Assets/Participant/Player…）配下ではないため、ZIPを作成できませんでした。",
+                        "OK"
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                EditorUtility.DisplayDialog("エラー", "圧縮中にエラーが発生しました:\n" + ex.Message, "OK");
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
     }
 
 }
