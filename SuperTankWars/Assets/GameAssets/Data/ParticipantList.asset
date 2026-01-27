@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: ParticipantList
   m_EditorClassIdentifier: 
   m_comPlayers:
-  - {fileID: 8693384130321668869, guid: 5a5d8fc58fd8a334cac8462b0463a181, type: 3}
   - {fileID: 8679809425556243391, guid: 96d3ce618080f9649aff18ac6d324c4e, type: 3}
   - {fileID: 2885821625585268814, guid: d96514dc3a20b4f4686c7ae1dbe94b6c, type: 3}
   - {fileID: 4769671058948033364, guid: 6161f6aef70e4f64e934882df4f3e04e, type: 3}
