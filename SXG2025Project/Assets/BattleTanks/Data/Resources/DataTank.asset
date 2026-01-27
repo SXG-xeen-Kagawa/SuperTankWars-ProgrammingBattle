@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74866e4e825b2a04cb5489e3ea20b8ee, type: 3}
+  m_Name: DataTank
+  m_EditorClassIdentifier: 
+  m_turretRotSpeedYaw: 180
+  m_turretRotSpeedPitch: 90
+  m_turretRotPitchLimitUp: -45
+  m_turretRotPitchLimitDown: 10
+  m_rotateJointRotSpeedYaw: 180
+  m_shootCannonShellVelocity: 38
+  m_shootRecoilForce: -190000
+  m_shellCollidedExplosionForce: 800000
+  m_shellCollidedExplosionRadius: 10
+  m_cannonShellGamePower: 100
+  m_cannonShellGameDamageRadius: 5
+  m_turretPartObjectVolume: 5
+  m_turretPartCost: 50
+  m_rotJointPartObjectVolume: 0.25
+  m_rotJointPartCost: 2
+  m_tankBasePartCost: 100
+  m_tankVolumeToCostCoef: 22
+  m_tankCostToMassCoef: 5
+  m_tankBaseMass: 1000
+  m_tankVolumeToDurability: 100
+  m_tankMaxAngularVelocity: 6
+  m_shotCooldownTime: 1.5
+  m_regulationBounds:
+    m_Center: {x: 0, y: 5, z: 0}
+    m_Extent: {x: 7, y: 6, z: 7}
