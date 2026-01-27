@@ -812,6 +812,17 @@ namespace SXG2025
             }
             yield return null;
 
+            // 戦車の行動を止める 
+            for (int i=0; i < GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE; ++i)
+            {
+                var playerSheet = m_playerEntrySheetList[i];
+                if (playerSheet.m_comPlayer != null)
+                {
+                    playerSheet.m_comPlayer.enabled = false;
+                    playerSheet.m_comPlayer.DeleteDebugDraw();
+                }
+            }
+
             // キャラテクスチャを描画開始 
             for (int i = 0; i < GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE; ++i)
             {

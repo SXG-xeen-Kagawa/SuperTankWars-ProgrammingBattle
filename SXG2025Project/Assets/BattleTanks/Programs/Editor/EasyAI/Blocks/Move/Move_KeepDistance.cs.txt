@@ -1,0 +1,52 @@
+﻿#region MOVE
+
+        [Header("<Move>")]
+        [SerializeField, Tooltip("基本となる移動の強さ"), Range(0.1f,1.0f)] float m_movePower = 1.0f;
+
+
+        void DoMove()
+        {
+            // なるべく他の戦車から離れた座標を求める
+            Vector3 targetPosition = FindFurthestPositionFromEnemies();
+
+            // そちらへ移動 
+            Vector3 toGoal = targetPosition - m_nowPosition;
+            SetCaterpillarTowardWorldDir(m_nowRotation, toGoal.normalized, forwardPower: m_movePower);
+
+            // 目標座標をデバッグ表示
+            SXG_DebugDrawPositionMarker(targetPosition);
+        }
+
+
+        /// <summary>
+        /// 敵から最も離れた場所を探す
+        /// </summary>
+        /// <returns></returns>
+        private Vector3 FindFurthestPositionFromEnemies()
+        {
+            int enemiesCount = 0;
+            Vector3 totalPosition = Vector3.zero;
+
+            // 生存している戦車の座標の重心を求める
+            for (int i = 1; i < m_allTanksInfo.Length; ++i)
+            {
+                var tankInfo = m_allTanksInfo[i];
+                if (tankInfo.IsDefeated) continue;  // 敗退済みは対象にしない
+                totalPosition += tankInfo.Position;
+                enemiesCount++;
+            }
+            if (0 < enemiesCount)
+            {
+                Vector3 averagePosition = totalPosition / (float)enemiesCount;
+                averagePosition.y = 0;
+                Vector3 toAverage = averagePosition.normalized;
+                // 敵の座標の重心と反対方向で闘技場から落ちない場所を求める 
+                return toAverage * (-GameConstants.ABOUT_GAME_FIELD_RADIUS * 0.8f);
+            } else
+            {
+                // 生きてる戦車がいないなら中央へ
+                return Vector3.zero;
+            }
+        }
+
+#endregion

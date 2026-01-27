@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +13,7 @@ namespace SXG2025
 {
     public class ParticipantCreationWindow : EditorWindow
     {
-        [MenuItem("SXG2025/挑戦者作成")]
+        [MenuItem("プロバト/挑戦者作成")]
         private static void OpenWindow()
         {
             var window = GetWindow<ParticipantCreationWindow>();
@@ -24,12 +25,30 @@ namespace SXG2025
         /// </summary>
         private string m_iconPath = "";
 
+        public enum EntryMethod
+        {
+            Connpass,
+            Other
+        }
+
+
         private class Data : ScriptableSingleton<Data>
         {
+            /// <summary>
+            /// 申し込みサイト
+            /// </summary>
+            public EntryMethod entryMethod = EntryMethod.Connpass;
+
             /// <summary>
             /// 申込時に発行される参加番号（7桁）
             /// </summary>
             public int participantID = 0;
+
+            /// <summary>
+            /// EntryMethod.Other用のランダム値 
+            /// </summary>
+            public int randomID = 0;
+
             /// <summary>
             /// 所属名
             /// </summary>
@@ -46,8 +65,20 @@ namespace SXG2025
             public bool isRunnning = false;
 
             public string GetName()
-                => $"Player{participantID:D7}";
+            {
+                if (entryMethod == EntryMethod.Connpass)
+                {
+                    return $"Player{participantID:D7}";
+                } else
+                {
+                    return $"PlayerOtr{randomID:D7}";
+                }
+            }
         }
+
+
+        const int MAX_ID = 9999999;
+
 
         private void OnGUI()
         {
@@ -56,12 +87,58 @@ namespace SXG2025
             GUILayout.Space(10);
             GUILayout.Label("■必須項目");
 
-            // 参加番号
-            var participantID = EditorGUILayout.IntField("　受付番号:", data.participantID);
-            data.participantID = Mathf.Clamp(participantID, 0, 9999999);
-            GUILayout.Label("　※connpassエントリー時に発行された受付番号を入力してください");
+            //-----------------------------------------------------
 
-            GUILayout.Space(10);
+            GUILayout.Label("　エントリーしたサイトを選んでください。");
+
+            // 申込方法（排他）
+            data.entryMethod = (EntryMethod)GUILayout.Toolbar(
+                (int)data.entryMethod,
+                new[] { "connpass", "Peatix／その他" }
+            );
+
+            GUILayout.Space(6);
+
+            // 参加ID
+            using (new GUILayout.HorizontalScope())
+            {
+                if (data.entryMethod == EntryMethod.Connpass)
+                {
+                    var id = EditorGUILayout.IntField("　参加ID（受付番号）:", data.participantID);
+                    data.participantID = Mathf.Clamp(id, 0, MAX_ID);
+                }
+                else
+                {
+                    // 未設定なら生成
+                    if (data.randomID <= 0)
+                        data.randomID = GenerateOtherEntryId();
+
+                    EditorGUILayout.LabelField("　参加ID:", data.randomID.ToString());
+
+                    if (GUILayout.Button("再生成", GUILayout.Width(60), GUILayout.Height(18)))
+                    {
+                        data.randomID = GenerateOtherEntryId();
+                        GUI.FocusControl("");
+                    }
+                }
+            }
+
+            // 短い説明はHelpBoxにまとめる（Label連打より読みやすい）
+            if (data.entryMethod == EntryMethod.Connpass)
+                EditorGUILayout.HelpBox("connpassの「受付番号」を入力してください。", MessageType.Info);
+            else
+                EditorGUILayout.HelpBox("受付番号がないため、参加IDは自動で割り当てます（変更不要）。", MessageType.Info);
+
+
+
+            //-----------------------------------------------------
+
+            //// 参加番号
+            //var participantID = EditorGUILayout.IntField("　受付番号:", data.participantID);
+            //data.participantID = Mathf.Clamp(participantID, 0, MAX_ID);
+            //GUILayout.Label("　※connpassエントリー時に発行された受付番号を入力してください");
+
+            GUILayout.Space(20);
             GUILayout.Label("■任意項目（後から変更可）");
 
             // 所属名
@@ -79,14 +156,15 @@ namespace SXG2025
                 EditorGUILayout.TextField("　アイコン画像選択:", m_iconPath);
                 if (GUILayout.Button("参照", GUILayout.Width(50), GUILayout.Height(18)))
                 {
-                    var path = EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg");
+                    var defaultDir = System.IO.Path.Combine(Application.dataPath, "GameAssets/Textures");
+                    var path = EditorUtility.OpenFilePanel("Select Image", defaultDir, "png,jpg,jpeg");
                     m_iconPath = path.Replace("\\", "/").Replace(Application.dataPath, "Assets");
                     GUI.FocusControl("");
                 }
             }
-            GUILayout.Label("　※所属名・挑戦者名は、全角半角問わず 最大10文字 としてください");
-            GUILayout.Label("　※アイコン画像ファイルの最大サイズは 256*256 です");
-            GUILayout.Label("　※公序良俗に反する画像や名前は設定しないでください");
+            GUILayout.Label("　※所属名・挑戦者名は、全角半角問わず 最大10文字 としてください。");
+            GUILayout.Label("　※アイコン画像ファイルの最大サイズは 256*256 です。");
+            GUILayout.Label("　※公序良俗に反する画像や名前は設定しないでください。");
 
             GUILayout.Space(10);
 
@@ -95,6 +173,12 @@ namespace SXG2025
                 AddParticipant();
             }
         }
+
+        private static int GenerateOtherEntryId()
+        {
+            return UnityEngine.Random.Range(0, MAX_ID);
+        }
+
 
         private void AddParticipant()
         {
@@ -105,7 +189,17 @@ namespace SXG2025
 
             if (Directory.Exists(folderPath))
             {
-                Debug.LogError($"参加番号:{data.participantID} の挑戦者は既に作成済みです。 - {folderPath}");
+                string error = "";
+                if (data.entryMethod == EntryMethod.Connpass)
+                {
+                    error = $"!!ERROR!!\n\n参加番号:{data.participantID} の戦車は既に作成済みです。 \n- {folderPath}";
+                } else
+                {
+                    error = $"!!ERROR!!\n\n参加ID:{data.randomID} の戦車は既に作成済みです。 \n- {folderPath}";
+                }
+                Debug.LogError(error);
+                EditorUtility.DisplayDialog("挑戦者登録", error, "OK");
+
                 return;
             }
 
@@ -203,7 +297,15 @@ namespace SXG2025
                     Selection.activeObject = prefabAsset;
                     EditorGUIUtility.PingObject(prefabAsset);
 
-                    EditorUtility.DisplayDialog("挑戦者登録", $"参加番号:{Data.instance.participantID} のAIを登録しました。\n{folderPath}", "OK");
+                    if (Data.instance.entryMethod == EntryMethod.Connpass)
+                    {
+                        EditorUtility.DisplayDialog("挑戦者登録",
+                            $"参加番号:{Data.instance.participantID} のAIを登録しました。\n{folderPath}", "OK");
+                    } else
+                    {
+                        EditorUtility.DisplayDialog("挑戦者登録",
+                            $"参加ID:{Data.instance.randomID} のAIを登録しました。\n{folderPath}", "OK");
+                    }
                 };
             }
             catch
@@ -215,3 +317,5 @@ namespace SXG2025
         }
     }
 }
+
+#endif

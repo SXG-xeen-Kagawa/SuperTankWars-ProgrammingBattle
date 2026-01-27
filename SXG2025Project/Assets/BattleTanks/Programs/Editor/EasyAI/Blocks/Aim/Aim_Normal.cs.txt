@@ -1,0 +1,51 @@
+﻿#region AIM
+
+        [Header("<Aim>")]
+        [SerializeField] EasyAI.TargetRule[] m_targetRules;
+
+
+        /// <summary>
+        /// 射撃処理 
+        /// </summary>
+        void DoAim()
+        {
+            // 砲台が無いなら何もしない 
+            if (m_turretCount <= 0) return;
+
+            // 狙う 
+            for (int i = 0; i < m_turretCount; ++i)
+            {
+                EasyAI.TargetRule rule = (m_targetRules != null && i < m_targetRules.Length)
+                    ? m_targetRules[i]
+                    : EasyAI.TargetRule.MinDistance;
+
+                int targetTankId = SelectTarget(rule);
+                if (0 < targetTankId)
+                {
+                    Vector3 targetPosition = m_allTanksInfo[targetTankId].Position;
+                    SXG_RotateTurretToImpactPoint(i, targetPosition);
+                }
+            }
+
+        }
+
+        private int SelectTarget(EasyAI.TargetRule rule)
+        {
+            switch (rule)
+            {
+                case EasyAI.TargetRule.MinDistance:
+                    return FindTankIdWithMinDistance();
+                case EasyAI.TargetRule.MinEnergy:
+                    return FindTankIdWithMinEnergy();
+                case EasyAI.TargetRule.MaxEnergy:
+                    return FindTankIdWithMaxEnergy();
+                case EasyAI.TargetRule.InFront:
+                    return FindTankIdInFront();
+                case EasyAI.TargetRule.Behind:
+                    return FindTankIdBehind();
+                default:
+                    return FindTankIdWithMinDistance();
+            }
+        }
+
+#endregion

@@ -26,7 +26,7 @@ namespace SXG2025
         /// <summary>
         /// Gameシーン後に遷移するシーン名
         /// </summary>
-        internal static string GameExitSceneName { get; private set; } = "Game";
+        internal static string GameExitSceneName { get; set; } = "Game";
         /// <summary>
         /// 参加プレイヤーのリストインデックス
         /// </summary>

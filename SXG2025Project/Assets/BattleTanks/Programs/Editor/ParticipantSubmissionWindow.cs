@@ -1,3 +1,4 @@
+﻿#if UNITY_EDITOR
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -8,7 +9,7 @@ namespace SXG2025
 {
     public class ParticipantSubmissionWindow : EditorWindow
     {
-        [MenuItem("SXG2025/挑戦者出力")]
+        [MenuItem("プロバト/挑戦者出力")]
         private static void OpenWindow()
         {
             var window = GetWindow<ParticipantSubmissionWindow>();
@@ -105,3 +106,5 @@ namespace SXG2025
         }
     }
 }
+
+#endif

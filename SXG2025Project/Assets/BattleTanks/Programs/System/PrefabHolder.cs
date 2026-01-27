@@ -67,6 +67,10 @@ namespace SXG2025
         [SerializeField] private UI.DestroiedTankUI m_destroiedTankUiPrefab = null;
         public UI.DestroiedTankUI DestroiedTankUiPrefab => m_destroiedTankUiPrefab;
 
+
+        [SerializeField] private DebugMarker m_debugMarkerPrefab = null;
+        public DebugMarker DebugMarkerPrefab => m_debugMarkerPrefab;
+
     }
 
 

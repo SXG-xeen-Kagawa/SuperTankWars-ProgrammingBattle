@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using System;
@@ -40,6 +41,9 @@ namespace SXG2025
         static GUIStyle m_valueStyle;
         static GUIStyle m_warningValueStyle;
 
+        static GUIStyle m_easyEditButtonStyle;
+        static GUIContent m_easyEditButtonContent;
+
         static List<GameObject> m_errorObjectList = new();
 
 
@@ -67,6 +71,29 @@ namespace SXG2025
             m_warningValueStyle = new GUIStyle(EditorStyles.label);
             m_warningValueStyle.normal.textColor = Color.red;
 
+            // 簡単編集ボタン
+            if (m_easyEditButtonStyle == null)
+            {
+                m_easyEditButtonStyle = new GUIStyle(GUI.skin.button);
+                m_easyEditButtonStyle.fontStyle = FontStyle.Bold;
+                m_easyEditButtonStyle.fontSize = 12;
+                m_easyEditButtonStyle.fixedHeight = 34;
+                m_easyEditButtonStyle.alignment = TextAnchor.MiddleCenter;
+                m_easyEditButtonStyle.wordWrap = true;
+                m_easyEditButtonStyle.padding = new RectOffset(6, 6, 2, 2);
+            }
+
+            // アイコン付きラベル 
+            if (m_easyEditButtonContent == null)
+            {
+                var icon = EditorGUIUtility.IconContent("d_ToolHandleCenter");
+                if (icon == null || icon.image == null)
+                {
+                    icon = EditorGUIUtility.IconContent("d_Settings");
+                }
+                m_easyEditButtonContent = new GUIContent("簡単プログラム編集を開く", icon.image,
+                    "簡単編集モードを開きます（適用時にAIスクリプトを上書きします）");
+            }
         }
 
 
@@ -95,7 +122,8 @@ namespace SXG2025
 
             // 見出し 
             Handles.BeginGUI();
-            GUILayout.BeginArea(new Rect(50, 10, 400, 128), GUI.skin.box);
+            //GUILayout.BeginArea(new Rect(50, 10, 400, 128), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(50, 10, 420, 240), GUI.skin.box);
             GUILayout.Label("＜戦車Prefab編集モード＞", EditorStyles.boldLabel);
             GUILayout.Space(5);
 
@@ -171,6 +199,24 @@ namespace SXG2025
             }
             GUILayout.EndHorizontal();
 
+            // ------ 危険操作 ------
+            {
+                GUILayout.Space(20);
+                GUILayout.Label("■初心者向け：かんたんAI作成", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox(
+                    "ボタンを押すと、選ぶだけでAIの動きを組み立てられる編集画面を開きます。\n"
+                    + "※編集画面で「適用」を行うと、現在のAIスクリプトは上書きされます。",
+                    MessageType.Info);
+
+                var oldBg = GUI.backgroundColor;
+                GUI.backgroundColor = new Color(1, 0.85f, 0.35f, 1.0f);
+                if (GUILayout.Button(m_easyEditButtonContent, m_easyEditButtonStyle, GUILayout.Width(180)))
+                {
+                    EasyProgramEditorWindow.Open(comPlayer);
+                }
+                GUI.backgroundColor = oldBg;
+            }
+
 
             // 終了 
             GUILayout.EndArea();
@@ -205,13 +251,64 @@ namespace SXG2025
                 Handles.EndGUI();
             }
 
+            // 地面を表示 
+            DrawGround();
+
             // レギュレーションサイズを表示 
             {
                 var dataTank = LoadEditorDataTankCache();
                 var bounds = dataTank.m_regulationBounds;
+
+                var oldZTest = Handles.zTest;
+                var oldColor = Handles.color;
+                Handles.zTest = UnityEngine.Rendering.CompareFunction.LessEqual;
+                if (0 < m_errorObjectList.Count)
+                {
+                    Handles.color = Color.red;  // 規定違反がある場合は枠線を赤にする 
+                } else
+                {
+                    //Handles.color = Color.white;
+                    Handles.color = new Color(0.5f, 1.0f, 0.7f);
+                }
                 Handles.DrawWireCube(bounds.center, bounds.size);
+                Handles.zTest = oldZTest;
+                Handles.color = oldColor;
             }
         }
+
+        /// <summary>
+        /// 地面を表示 
+        /// </summary>
+        static void DrawGround()
+        {
+            const float GROUND_Y = -0.57f;                // 地面の高さ 
+            const float RADIUS = 5.0f;
+
+            // 円の中心 
+            Vector3 center = Vector3.zero;
+            center.y = GROUND_Y;
+
+            // 半透明の茶色
+            var fillColor = new Color(0.55f, 0.30f, 0.12f, 0.20f);
+            var edgeColor = new Color(0.55f, 0.30f, 0.12f, 0.90f);
+
+            // デプス 
+            var oldZTest = Handles.zTest;
+            Handles.zTest = UnityEngine.Rendering.CompareFunction.LessEqual;
+
+            // 内円
+            Handles.color = fillColor;
+            Handles.DrawSolidDisc(center, Vector3.up, RADIUS);
+
+            // 外円 
+            Handles.color = edgeColor;
+            Handles.DrawWireDisc(center, Vector3.up, RADIUS);
+
+            // 戻す 
+            Handles.zTest = oldZTest;
+            Handles.color = Color.white;
+        }
+
 
         static void TryAddTurretToTankInPrefabStage(ComPlayerBase comPlayer, PrefabStage stage)
         {
@@ -256,6 +353,13 @@ namespace SXG2025
             newTurret.transform.SetParent(comPlayer.transform, false);
             newTurret.transform.SetLocalPositionAndRotation(DefTurretLocalPosition, Quaternion.identity);
 
+            // 命名 
+            {
+                var prefix = turretPrefab.name + "_";
+                int serial = GetNextTwoDigitSerialUnder(comPlayer.transform, prefix);
+                newTurret.name = $"{prefix}{serial:00}";
+            }
+
             // ComPlayerBaseの配列に追加
             SerializedObject so = new SerializedObject(comPlayer);
             SerializedProperty arrayProperty = so.FindProperty(TurretArrayFieldName);
@@ -280,6 +384,11 @@ namespace SXG2025
             // Inspector更新とログ 
             EditorUtility.SetDirty(comPlayer);
             Debug.Log("砲塔を追加しました。Prefab編集画面のSaveを押して保存してください。");
+
+            // 生成したオブジェクトを選択状態にする 
+            Selection.activeGameObject = newTurret;
+            EditorGUIUtility.PingObject(newTurret);
+            //SceneView.FrameLastActiveSceneView();     // このオブジェクトにカメラをフォーカスしたい場合に使う 
         }
 
         /// <summary>
@@ -328,6 +437,13 @@ namespace SXG2025
             newRotator.transform.SetParent(comPlayer.transform, false);
             newRotator.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
 
+            // 命名 
+            {
+                var prefix = rotatorPrefab.name + "_";
+                int serial = GetNextTwoDigitSerialUnder(comPlayer.transform, prefix);
+                newRotator.name = $"{prefix}{serial:00}";
+            }
+
             // ComPlayerBaseの配列に追加
             SerializedObject so = new SerializedObject(comPlayer);
             SerializedProperty arrayProperty = so.FindProperty(RotatorArrayFieldName);
@@ -352,6 +468,38 @@ namespace SXG2025
             // Inspector更新とログ 
             EditorUtility.SetDirty(comPlayer);
             Debug.Log("回転部位を追加しました。Prefab編集画面のSaveを押して保存してください。");
+
+            // 生成したオブジェクトを選択状態にする 
+            Selection.activeGameObject = newRotator;
+            EditorGUIUtility.PingObject(newRotator);
+            //SceneView.FrameLastActiveSceneView();     // このオブジェクトにカメラをフォーカスしたい場合に使う 
+        }
+
+
+        static int GetNextTwoDigitSerialUnder(Transform root, string namePrefix)
+        {
+            int max = 0;
+
+            var all = root.GetComponentsInChildren<Transform>(true);
+            foreach (var tr in all)
+            {
+                if (tr == null) continue;
+
+                var n = tr.gameObject.name;
+                if (!n.StartsWith(namePrefix, StringComparison.Ordinal)) continue;
+
+                // 末尾２桁を読む 
+                if (n.Length < namePrefix.Length + 2) continue;
+
+                var tail = n.Substring(n.Length - 2, 2);
+                if (int.TryParse(tail, out var v))
+                {
+                    if (max < v) max = v;
+                }
+            }
+
+            // 次の番号を返す 
+            return max + 1;
         }
 
 
@@ -611,3 +759,4 @@ namespace SXG2025
 
 }
 
+#endif

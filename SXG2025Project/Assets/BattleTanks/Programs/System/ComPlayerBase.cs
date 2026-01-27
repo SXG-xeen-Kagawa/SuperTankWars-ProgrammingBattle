@@ -17,7 +17,18 @@ namespace SXG2025
 
         // 顔画像 
         [SerializeField] private Sprite m_faceImage = null;
-        public Sprite FaceImage => m_faceImage;
+        public Sprite FaceImage { 
+            get
+            {
+                if(m_faceImage == null)
+                {
+                    Sprite sp = Resources.Load<Sprite>("Textures/noimage");
+                    if (sp != null) return sp;
+                    return null;
+                }
+                return m_faceImage;
+            }
+        }
 
 
         // 砲塔(Turret)を登録 
@@ -113,6 +124,10 @@ namespace SXG2025
             }
         }
 
+        private void OnDestroy()
+        {
+            DeleteDebugDraw();
+        }
 
 
         #region 参照用の関数群
@@ -297,7 +312,14 @@ namespace SXG2025
         /// <param name="rotation"></param>
         protected void SXG_GetPositionAndRotation(out Vector3 position, out Quaternion rotation)
         {
-            m_gameManager.GetTankPositionAndRotation(m_id, out position, out rotation);
+            if (m_gameManager != null)
+            {
+                m_gameManager.GetTankPositionAndRotation(m_id, out position, out rotation);
+            } else
+            {
+                position = Vector3.zero;
+                rotation = Quaternion.identity;
+            }
         }
 
 
@@ -320,13 +342,16 @@ namespace SXG2025
         {
             TankInfo[] tanksInfo = new TankInfo[GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE];
 
-            for (int i=0; i < tanksInfo.Length; ++i)
+            if (m_gameManager != null)
             {
-                tanksInfo[i] = new();
-                int globalId = (m_id + i) % GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE;
-                m_gameManager.GetTankPositionAndRotation(globalId, out tanksInfo[i].Position, out tanksInfo[i].Rotation);
-                m_gameManager.GetTankInfo(globalId, out tanksInfo[i].Energy, out tanksInfo[i].CostOfOneTank,
-                    out tanksInfo[i].IsDefeated, out tanksInfo[i].IsInvincible);
+                for (int i = 0; i < tanksInfo.Length; ++i)
+                {
+                    tanksInfo[i] = new();
+                    int globalId = (m_id + i) % GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE;
+                    m_gameManager.GetTankPositionAndRotation(globalId, out tanksInfo[i].Position, out tanksInfo[i].Rotation);
+                    m_gameManager.GetTankInfo(globalId, out tanksInfo[i].Energy, out tanksInfo[i].CostOfOneTank,
+                        out tanksInfo[i].IsDefeated, out tanksInfo[i].IsInvincible);
+                }
             }
 
             return tanksInfo;
