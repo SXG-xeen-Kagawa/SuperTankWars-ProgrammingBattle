@@ -16,7 +16,10 @@ namespace SXG2025
         // Player1234567 / PlayerOtr1234567
         static readonly Regex PlayerFolderRegex = new Regex(@"^(Player|PlayerOtr)\d{7}(\b|[\s　＿_－\-・].*)?$", RegexOptions.Compiled);
 
-        [MenuItem("Assets/プロバト/提出用ZIPを作成", false, 2000)]
+
+
+
+        [MenuItem("Assets/プロバト/提出用ZIPを作成", false, 1)]
         static void CreateZipFromSelectedFolder()
         {
             string assetPath = GetSelectedFolderAssetPath();
@@ -70,7 +73,7 @@ namespace SXG2025
 
 
 
-        [MenuItem("Assets/プロバト/提出用ZIPを作成", true)]
+        [MenuItem("Assets/プロバト/提出用ZIPを作成", true, 1)]
         static bool ValidateCreateZipFromSelectedFolder()
         {
             string assetPath = GetSelectedFolderAssetPath();

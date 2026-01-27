@@ -52,6 +52,7 @@
 - [SXG_RotateJointToAngle](#func10)
 - [SXG_GetPositionAndRotation](#func11)
 - [SXG_GetAllTanksInfo](#func12)
+- [SXG_DebugDrawPositionMarker](#func14)
 
 ## 戦車のカスタマイズ方法
 
@@ -414,26 +415,40 @@ SXG_GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
 
 ---
 
-<h3 id="func12">SXG_GetAllTanksInfo</h3>
 
-TankInfo[] SXG_GetAllTanksInfo();
 
-自身を含む、全戦車（4台）の情報のリストを取得します。  
-戻り値の0番目の要素には自身の戦車の情報が入っています。
+<h3 id="func14">SXG_DebugDrawPositionMarker</h3>
 
-        // 戦車の情報 構造体
-        public struct TankInfo
-        {
-            public Vector3 Position;    // 戦車の座標 
-            public Quaternion Rotation; // 戦車の向き
-            public int Energy;          // チームの残りエナジー 
-            public int CostOfOneTank;   // 戦車1台分のコスト 
-            public bool IsDefeated;     // 敗退済みフラグ
-            public bool IsInvincible;   // 無敵フラグ
-        }
+void SXG_DebugDrawPositionMarker(Vector3 targetPosition, bool isDraw=true);
+
+デバッグ用に、指定した座標へマーカー（●）を表示します。  
+戦車が向かいたい座標や、狙っている座標などを可視化できるため、目標座標の計算が意図どおりかどうかを確認できます。
+
+- targetPosition：マーカーを表示するワールド座標
+- isDraw：表示するかどうか（省略時はtrue）
+
+**表示される場所**  
+- マーカーは **Sceneビュー** と **Gameビュー** の両方に表示されます。
+
+**注意**  
+- この表示はデバッグ用途です。イベント本番では表示されません。  
+- 開発中でも、`isDraw=false` を指定すると意図的に非表示にできます。
+
+**使用例**
+
+```C#
+private void Update()
+{
+    Vector3 target = new Vector3(0, 0, 0);
+    SXG_DebugDrawPositionMarker(target);
+}
+```
+
 
 
 ---
+
+
 
 
 
