@@ -778,6 +778,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1162,6 +1163,7 @@ MonoBehaviour:
   m_sphereShieldPrefab: {fileID: 3474089113091250134, guid: 1636061ee60f59f4a892a0b18c674300, type: 3}
   m_charaRenderCameraPrefab: {fileID: 5304027983124812982, guid: 5673e667244e10741b5d38e81500a3e5, type: 3}
   m_destroiedTankUiPrefab: {fileID: 6279201930363970732, guid: ca14eb7bfdabdf743a17773062920537, type: 3}
+  m_debugMarkerPrefab: {fileID: 5473048911649083521, guid: 6cd9326b464b53341bec0c6f2105163b, type: 3}
 --- !u!4 &1231818770
 Transform:
   m_ObjectHideFlags: 0
