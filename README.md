@@ -14,12 +14,23 @@
 ## 重要：まずはここから（ダウンロード方法）
 
 ### 初めての方（おすすめ）
-1. GitHubの **Releases** からZIPをダウンロードします。  
-2. ZIPを展開して、Unity Hubでプロジェクトを開きます。
+1. 下のReleases（最新版）を開きます。  
+2. **Assets** の `SuperTankWars_*.zip` をダウンロードします。  
+   - ※ `Source code (zip)` ではありません。  
+3. ZIPを展開して、Unity Hubでプロジェクトを開きます。
 
-- Releases：**【後でURLを入れます】**
+- Releases（最新版）：  
+  https://github.com/SXG-xeen-Kagawa/SuperTankWars-ProgrammingBattle/releases/latest
 
-### 上級者向け（任意）
+<div align="center">
+  <img width="880" alt="ReleasesのAssetsからZIPをダウンロード" src="Documents/ReadMeImages/Top/002.png" />
+</div>
+
+> 補足：すぐに作業を始めたい方は、次の2つを見ると迷いにくいです。  
+> - [『AI作成手順』](Documents/ReadMeFiles/README_HowToCreate.md)  
+> - [『AI提出手順』](Documents/ReadMeFiles/README_HowToSubmit.md)
+
+### 上級者向け（任意：Gitで取得する）
 Gitに慣れている方は、このリポジトリをCloneして使っても構いません。  
 更新があった場合はPullで最新版にできます。  
 ※初めての方はReleasesのZIPを使うほうが簡単です。
