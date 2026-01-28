@@ -15,8 +15,7 @@
 
 ### 初めての方（おすすめ）
 1. 下のReleases（最新版）を開きます。  
-2. **Assets** の `SuperTankWars_*.zip` をダウンロードします。  
-   - ※ `Source code (zip)` ではありません。  
+2. **Assets** の `SuperTankWars_v0.9.0.zip` をダウンロードします。  
 3. ZIPを展開して、Unity Hubでプロジェクトを開きます。
 
 - Releases（最新版）：  

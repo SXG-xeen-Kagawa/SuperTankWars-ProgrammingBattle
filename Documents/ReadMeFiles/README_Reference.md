@@ -430,6 +430,10 @@ void SXG_DebugDrawPositionMarker(Vector3 targetPosition, bool isDraw=true);
 **表示される場所**  
 - マーカーは **Sceneビュー** と **Gameビュー** の両方に表示されます。
 
+<div align="center">
+  <img width="400" alt="SXG_DebugDrawPositionMarkerで表示されるマーカー（●）の例" src="../ReadMeImages/Reference/014_DebugDrawPositionMarker.png" />
+</div>
+
 **注意**  
 - この表示はデバッグ用途です。イベント本番では表示されません。  
 - 開発中でも、`isDraw=false` を指定すると意図的に非表示にできます。
