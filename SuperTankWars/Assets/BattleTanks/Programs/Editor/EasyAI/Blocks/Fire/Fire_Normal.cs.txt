@@ -1,6 +1,6 @@
 ﻿#region FIRE
 
-        [Header("<Fire>")]
+        [Header("<Fire (射撃)>")]
         [SerializeField] float m_fireInterval = 0.2f;       // 1基ずつの砲台の射撃インターバル
 
         [SerializeField] bool m_dontFireNearEdge = false;   // 外周付近では反動による落下を恐れて射撃しない

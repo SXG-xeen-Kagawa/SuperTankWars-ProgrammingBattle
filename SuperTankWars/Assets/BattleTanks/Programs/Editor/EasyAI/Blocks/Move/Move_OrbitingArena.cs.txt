@@ -1,6 +1,6 @@
 ﻿#region MOVE
 
-        [Header("<Move>")]
+        [Header("<Move (移動)>")]
         [SerializeField, Tooltip("基本となる移動の強さ"), Range(0.1f,1.0f)] float m_movePower = 1.0f;
         [SerializeField, Tooltip("目標移動半径"), Range(0.1f, 40.0f)] float m_targetRadius = 34.0f;
         [SerializeField, Tooltip("時計回り？反時計回り？")] bool m_isClockwise = true;

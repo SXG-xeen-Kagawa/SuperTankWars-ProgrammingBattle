@@ -1,6 +1,6 @@
 ﻿#region AIM
 
-        [Header("<Aim>")]
+        [Header("<Aim (狙い)>")]
         [SerializeField] EasyAI.TargetRule[] m_targetRules;
 
 

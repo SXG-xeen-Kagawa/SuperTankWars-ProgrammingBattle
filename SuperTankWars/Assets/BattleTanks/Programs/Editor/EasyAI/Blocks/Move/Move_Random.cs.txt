@@ -1,6 +1,6 @@
 ﻿#region MOVE
 
-        [Header("<Move>")]
+        [Header("<Move (移動)>")]
         [SerializeField, Tooltip("目標座標のランダム抽選半径")] float m_goalRadius = GameConstants.ABOUT_GAME_FIELD_RADIUS;
         [SerializeField, Tooltip("到達判定距離")] float m_goalReachRadius = 1.0f;
         [SerializeField, Tooltip("目標再抽選までの時間")] float m_goalTimeoutSec = 4.0f;

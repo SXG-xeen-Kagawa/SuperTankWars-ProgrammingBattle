@@ -1,6 +1,6 @@
 ﻿#region MOVE
 
-        [Header("<Move>")]
+        [Header("<Move (移動)>")]
         [SerializeField, Tooltip("基本となる移動の強さ"), Range(0.1f,1.0f)] float m_movePower = 1.0f;
 
 

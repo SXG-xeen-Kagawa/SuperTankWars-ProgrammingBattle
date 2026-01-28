@@ -26,11 +26,19 @@ Unity上部メニューから、以下を選びます。
 
 - `プロバト/挑戦者作成`
 
+<div align="center">
+  <img width="500" src="../ReadMeImages/HowToCreate/011.png" />
+</div>
+
 挑戦者作成ウィンドウが開きます。
 
 ---
 
 ### 2. 各項目を入力する
+
+<div align="center">
+  <img width="500" src="../ReadMeImages/HowToCreate/012.png" />
+</div>
 
 **■必須項目**
 - エントリーしたサイト（connpass / その他）を選びます。
@@ -74,6 +82,10 @@ Unity上部メニューから、以下を選びます。
 
 カスタマイズの詳しい手順は、[『戦車のカスタマイズ方法』](README_HowToCustomizeTank.md) をご確認ください。
 
+<div align="center">
+  <img width="600" src="../ReadMeImages/HowToCreate/013.png" />
+</div>
+
 ---
 
 ## ゲームを実行する
@@ -85,7 +97,12 @@ Unity上部メニューから、以下を選びます。
 新規AI作成時、自身の戦車がリストの先頭に登録され、ゲーム内で挑戦者として選択できるようになります。
 
 戦わせる挑戦者を変更したい場合は、リストの順番を並べ替えてみてください。  
-また、挑戦者選択シーン（`Assets/Scenes/ParticipantSelection.unity`）が用意されている場合は、実行時に戦わせる挑戦者を選択できます。
+また、挑戦者選択シーン（`Assets/Scenes/ParticipantSelection.unity`）を実行すると、戦わせる挑戦者を選択できます。
+
+<div align="center">
+  <img width="600" src="../ReadMeImages/HowToCreate/010.png" />
+</div>
+
 
 ---
 
