@@ -368,8 +368,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_yourOrganization: xeen
-  m_yourName: "\u30A2\u30E1\u30F3\u30DC"
+  m_yourName: "\u30B5\u30F3\u30D7\u30EB06"
+  m_tankName: "\u30A2\u30E1\u30F3\u30DC"
   m_faceImage: {fileID: 21300000, guid: 789a1e914423bce44995b2f55e81137f, type: 3}
+  m_promoCardImage: {fileID: 21300000, guid: 5c9d607c06e538f4db936d56afa07c5b, type: 3}
   m_turrets:
   - {fileID: 5839327555955117781}
   - {fileID: 7300070088316641375}

@@ -1682,9 +1682,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e9124fcd2ac54a7c8660f3a97b061d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_yourOrganization: xeen
+  m_yourOrganization: FM728
   m_yourName: "\u305F\u3053\u306D\u3053"
+  m_tankName: "\u305F\u3053\u306D\u3053\u53F7"
   m_faceImage: {fileID: 21300000, guid: f7048e2f67a6ab741b8caf3b8ad71a0c, type: 3}
+  m_promoCardImage: {fileID: 21300000, guid: 0cce78e0bd43494478c27129259faa4c, type: 3}
   m_turrets:
   - {fileID: 8338852670985159516}
   m_rotJoints: []

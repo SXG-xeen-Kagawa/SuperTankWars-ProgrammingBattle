@@ -109,7 +109,7 @@ namespace SXG2025
                 Vector3 direction = dirToGoal.normalized;
 
                 // debug
-                m_debugSphereTr.position = positionToMove;
+                //m_debugSphereTr.position = positionToMove;
 
                 // ほとんどゴールに到達していたら中断 
                 if (dirToGoal.magnitude < 1.0f)

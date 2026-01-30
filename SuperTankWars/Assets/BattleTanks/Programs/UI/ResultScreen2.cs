@@ -29,7 +29,7 @@ namespace SXG2025
             public delegate void OnGetPriceDelegate(int teamNo, int price, int step);
 
             public bool IsEndResult { get; private set; } = false;
-
+            public int[] TeamScore { get => m_teamScore; }
 
             private OnFinishResultAnimation m_onFinishResultAnimationCallback = null;
 
@@ -386,7 +386,7 @@ namespace SXG2025
                     m_resultPlayersList[scoreChip.m_teamNo].SetRank(currentRank);
 
                     // リザルトにも格納しておく 
-                    //GameConfigSetting.Ranking[scoreChip.m_teamNo] = currentRank + 1;
+                    GameConfigSetting.Instance.Ranking[scoreChip.m_teamNo] = currentRank + 1;
 
                 }
             }

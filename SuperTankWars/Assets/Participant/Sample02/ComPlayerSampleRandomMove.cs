@@ -166,7 +166,7 @@ namespace nsSample
                 // キャタピラのパワー設定 
                 SXG_SetCaterpillarPower(leftTorque, rightTorque);
 
-                m_debugObjTr.position = randomPosition;
+                //m_debugObjTr.position = randomPosition;
 
                 // 射撃 
                 shootTimer -= Time.deltaTime;

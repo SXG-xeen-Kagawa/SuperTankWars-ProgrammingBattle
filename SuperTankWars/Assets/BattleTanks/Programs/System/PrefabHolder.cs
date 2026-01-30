@@ -71,6 +71,13 @@ namespace SXG2025
         [SerializeField] private DebugMarker m_debugMarkerPrefab = null;
         public DebugMarker DebugMarkerPrefab => m_debugMarkerPrefab;
 
+
+        /// <summary>
+        /// PRカード表示 
+        /// </summary>
+        [SerializeField] private PromoCardsInsert m_promoCardsInsertPrefab = null;
+        public PromoCardsInsert PromoCardsInsertPrefab => m_promoCardsInsertPrefab;
+
     }
 
 

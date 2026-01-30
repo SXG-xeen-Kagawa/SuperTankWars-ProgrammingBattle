@@ -40,6 +40,11 @@ namespace SXG2025
 
             // フェードイン 
             FadeCanvas.Instance.FadeIn();
+            // フェードイン２
+            if (PromoCardsInsert.Check)
+            {
+                PromoCardsInsert.Instance.FadeIn();
+            }
             yield return new WaitForSeconds(0.5f);
         }
 

@@ -260,8 +260,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_yourOrganization: xeen
-  m_yourName: "\u963F\u4FEE\u7F85"
+  m_yourName: "\u30B5\u30F3\u30D7\u30EB07"
+  m_tankName: "\u963F\u4FEE\u7F85"
   m_faceImage: {fileID: 21300000, guid: 566a5004a3a63854dacd2fe91d4e7b58, type: 3}
+  m_promoCardImage: {fileID: 21300000, guid: 2931737d2b23cfe41b422db6caf8f845, type: 3}
   m_turrets:
   - {fileID: 5697565803411118220}
   m_rotJoints:

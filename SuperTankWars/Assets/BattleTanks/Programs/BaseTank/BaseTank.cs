@@ -227,6 +227,7 @@ namespace SXG2025
                 var jointData = behaviorData.m_jointData[i];
                 var jointPart = m_joints[i];
 
+                if (jointPart == null) continue;
                 // 非アクティブなら無視
                 if (!jointPart.isActiveAndEnabled)
                     continue;
@@ -387,6 +388,11 @@ namespace SXG2025
             var collidedPart = m_tankPartsList.Find((a) => { return a.m_partTr == collidedCollider.transform; });
             if (collidedPart != null)
             {
+                if (collidedPart.m_durability < 0)
+                {
+                    return true;    // 既に耐久力無なら部位破壊済み 
+                }
+
                 Debug.Log("[Damage] " + collidedPart.m_partTr.name + " damage=" + damage 
                     + " hp=" + collidedPart.m_durability + " => " + (collidedPart.m_durability-damage) + " | T=" + Time.frameCount);
 

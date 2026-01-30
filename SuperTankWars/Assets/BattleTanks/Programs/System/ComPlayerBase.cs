@@ -8,27 +8,54 @@ namespace SXG2025
     public partial class ComPlayerBase : MonoBehaviour
     {
         // 所属組織 
-        [SerializeField] private string m_yourOrganization = "Please input your organization.";
+        [SerializeField, Tooltip("例：〇〇学校／株式会社〇〇")]
+        private string m_yourOrganization = "Please input your organization.";
         public string Organization => m_yourOrganization;
 
         // 名前 
-        [SerializeField] private string m_yourName = "Please input your name.";
+        [SerializeField, Tooltip("あなたの名前")] 
+        private string m_yourName = "Please input your name.";
         public string YourName => m_yourName;
+
+        // 戦車の名前
+        [SerializeField, Tooltip("")]
+        private string m_tankName = "";
+        public string TankName => m_tankName;
 
         // 顔画像 
         [SerializeField] private Sprite m_faceImage = null;
         public Sprite FaceImage { 
             get
             {
-                if(m_faceImage == null)
+                if (m_faceImage != null) return m_faceImage;
+
+                if(s_defaultFaceImage == null)
                 {
-                    Sprite sp = Resources.Load<Sprite>("Textures/noimage");
-                    if (sp != null) return sp;
-                    return null;
+                    s_defaultFaceImage = Resources.Load<Sprite>("Textures/noimage");
                 }
-                return m_faceImage;
+                return s_defaultFaceImage;
             }
         }
+        private static Sprite s_defaultFaceImage = null;
+
+
+        // プロモカード画像
+        [SerializeField, Tooltip("PRしたい画像。解像度960x540推奨")] private Sprite m_promoCardImage = null;
+        public Sprite PromoCardImage
+        {
+            get
+            {
+                if (m_promoCardImage != null) return m_promoCardImage;
+
+                if (s_defaultPromoCardImage == null)
+                {
+                    s_defaultPromoCardImage = Resources.Load<Sprite>("Textures/default_promo_card");
+                }
+                return s_defaultPromoCardImage;
+            }
+        }
+        private static Sprite s_defaultPromoCardImage = null;
+
 
 
         // 砲塔(Turret)を登録 
@@ -48,11 +75,13 @@ namespace SXG2025
 
         private int m_id = 0;
 
-        public void SetPlayerData(string organization, string name, Sprite icon)
+        public void SetPlayerData(string organization, string name, string tankName, Sprite icon, Sprite promoCard)
         {
             m_yourOrganization = organization;
             m_yourName = name;
+            m_tankName = tankName;
             m_faceImage = icon;
+            m_promoCardImage = promoCard;
         }
 
         public void Setup(int id, BattleTanksManager gameManager)
@@ -97,10 +126,16 @@ namespace SXG2025
             // 砲塔にカラーマテリアルを設定 
             foreach (var turret in m_turrets)
             {
-                var meshes = turret?.GetComponentsInChildren<MeshRenderer>();
-                foreach (var mesh in meshes)
+                if (turret != null)
                 {
-                    mesh.material = colorMaterial;
+                    var meshes = turret?.GetComponentsInChildren<MeshRenderer>();
+                    if (meshes != null)
+                    {
+                        foreach (var mesh in meshes)
+                        {
+                            mesh.material = colorMaterial;
+                        }
+                    }
                 }
             }
         }

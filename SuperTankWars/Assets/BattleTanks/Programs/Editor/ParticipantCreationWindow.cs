@@ -18,12 +18,24 @@ namespace SXG2025
         {
             var window = GetWindow<ParticipantCreationWindow>();
             window.titleContent = new GUIContent("挑戦者作成");
+
+            // 最低サイズ
+            window.minSize = new Vector2(600, 420);
+
+            // 初期サイズ 
+            var rect = window.position;
+            rect.width = 620;
+            rect.height = 500;
+            window.position = rect;
         }
 
         /// <summary>
         /// 画像ファイルパス
         /// </summary>
         private string m_iconPath = "";
+
+        private string m_promoImagePath = "";
+
 
         public enum EntryMethod
         {
@@ -58,9 +70,17 @@ namespace SXG2025
             /// </summary>
             public string playerName = "挑戦者";
             /// <summary>
+            /// 戦車名
+            /// </summary>
+            public string tankName = "戦車名";
+            /// <summary>
             /// 画像スプライト
             /// </summary>
             public Sprite sprite = null;
+            /// <summary>
+            /// プロモーションカード画像 
+            /// </summary>
+            public Sprite promoCard = null;
 
             public bool isRunnning = false;
 
@@ -78,8 +98,141 @@ namespace SXG2025
 
 
         const int MAX_ID = 9999999;
+        const int MAX_NUM = 10;
 
+        private const string NOTICE_TEXT = "※公序良俗に反する内容や、第三者の権利（著作権・商標権・肖像権等）を侵害する画像・名称は設定しないでください。";
 
+        private Vector2 m_scroll;
+
+        private void OnGUI()
+        {
+            m_scroll = EditorGUILayout.BeginScrollView(m_scroll);
+
+            var data = Data.instance;
+
+            GUILayout.Space(10);
+            GUILayout.Label("■必須項目");
+
+            GUILayout.Label("　エントリーしたサイトを選んでください。");
+
+            data.entryMethod = (EntryMethod)GUILayout.Toolbar(
+                (int)data.entryMethod,
+                new[] { "connpass", "Peatix／その他" }
+            );
+
+            GUILayout.Space(6);
+
+            using (new GUILayout.HorizontalScope())
+            {
+                if (data.entryMethod == EntryMethod.Connpass)
+                {
+                    var id = EditorGUILayout.IntField("　参加ID（受付番号）:", data.participantID);
+                    data.participantID = Mathf.Clamp(id, 0, MAX_ID);
+                }
+                else
+                {
+                    if (data.randomID <= 0)
+                        data.randomID = GenerateOtherEntryId();
+
+                    EditorGUILayout.LabelField("　参加ID:", data.randomID.ToString());
+
+                    if (GUILayout.Button("再生成", GUILayout.Width(60), GUILayout.Height(18)))
+                    {
+                        data.randomID = GenerateOtherEntryId();
+                        GUI.FocusControl("");
+                    }
+                }
+            }
+
+            if (data.entryMethod == EntryMethod.Connpass)
+                EditorGUILayout.HelpBox("connpassの「受付番号」を入力してください。", MessageType.Info);
+            else
+                EditorGUILayout.HelpBox("受付番号がないため、参加IDは自動で割り当てます（変更不要）。", MessageType.Info);
+
+            GUILayout.Space(20);
+            GUILayout.Label("■任意項目（後から変更可）");
+            EditorGUILayout.HelpBox("未設定でもエントリーはできますが、設定していただいた方が絶対楽しいです。", MessageType.None);
+
+            // 所属名
+            data.organization = EditorGUILayout.TextField("　所属名:", data.organization);
+            if (MAX_NUM < data.organization.Length)
+                data.organization = data.organization[..MAX_NUM];
+
+            // 挑戦者名
+            data.playerName = EditorGUILayout.TextField("　挑戦者名:", data.playerName);
+            if (MAX_NUM < data.playerName.Length)
+                data.playerName = data.playerName[..MAX_NUM];
+
+            // 戦車名
+            data.tankName = EditorGUILayout.TextField("　戦車名:", data.tankName);
+            if (MAX_NUM < data.tankName.Length)
+                data.tankName = data.tankName[..MAX_NUM];
+
+            // アイコン画像
+            using (new GUILayout.HorizontalScope())
+            {
+                EditorGUILayout.TextField("　アイコン画像:", m_iconPath);
+                if (GUILayout.Button("参照", GUILayout.Width(50), GUILayout.Height(18)))
+                {
+                    var defaultDir = Path.Combine(Application.dataPath, "GameAssets/Textures");
+                    var path = EditorUtility.OpenFilePanel("Select Image", defaultDir, "png,jpg,jpeg");
+                    if (!string.IsNullOrEmpty(path))
+                        m_iconPath = path.Replace("\\", "/").Replace(Application.dataPath, "Assets");
+                    GUI.FocusControl("");
+                }
+                if (GUILayout.Button("クリア", GUILayout.Width(50), GUILayout.Height(18)))
+                {
+                    m_iconPath = "";
+                    GUI.FocusControl("");
+                }
+            }
+
+            // プロモーションカード画像
+            using (new GUILayout.HorizontalScope())
+            {
+                EditorGUILayout.TextField("　プロモーションカード画像:", m_promoImagePath);
+                if (GUILayout.Button("参照", GUILayout.Width(50), GUILayout.Height(18)))
+                {
+                    var defaultDir = Path.Combine(Application.dataPath, "GameAssets/Textures");
+                    var path = EditorUtility.OpenFilePanel("Select Image", defaultDir, "png,jpg,jpeg");
+                    if (!string.IsNullOrEmpty(path))
+                        m_promoImagePath = path.Replace("\\", "/").Replace(Application.dataPath, "Assets");
+                    GUI.FocusControl("");
+                }
+                if (GUILayout.Button("クリア", GUILayout.Width(50), GUILayout.Height(18)))
+                {
+                    m_promoImagePath = "";
+                    GUI.FocusControl("");
+                }
+            }
+
+            GUILayout.Label("　※所属名・挑戦者名は、全角半角問わず 最大10文字 としてください。");
+            GUILayout.Label("　※アイコン画像ファイルの最大サイズは 256×256 です。");
+            GUILayout.Label("　※プロモーションカード画像ファイルの最大サイズは 960×540 です。");
+            GUILayout.Label("　" + NOTICE_TEXT);
+
+            GUILayout.Space(10);
+
+            // 作成可否（最低限の事故防止）
+            bool canCreate = true;
+            if (data.entryMethod == EntryMethod.Connpass && data.participantID <= 0)
+                canCreate = false;
+
+            using (new EditorGUI.DisabledScope(!canCreate))
+            {
+                if (GUILayout.Button("作成", GUILayout.Height(32)))
+                {
+                    AddParticipant();
+                }
+            }
+
+            if (!canCreate)
+                EditorGUILayout.HelpBox("参加ID（受付番号）を入力してください。", MessageType.Warning);
+
+            EditorGUILayout.EndScrollView();
+        }
+
+        /*
         private void OnGUI()
         {
             var data = Data.instance;
@@ -150,10 +303,14 @@ namespace SXG2025
             data.playerName = EditorGUILayout.TextField("　挑戦者名:", data.playerName);
             if (MAX_NUM < data.playerName.Length)
                 data.playerName = data.playerName.Remove(MAX_NUM, data.playerName.Length - MAX_NUM);
+            // 戦車名
+            data.tankName = EditorGUILayout.TextField("　戦車名:", data.tankName);
+            if (MAX_NUM < data.tankName.Length)
+                data.tankName = data.tankName.Remove(MAX_NUM, data.tankName.Length - MAX_NUM);
             // アイコン画像
             using (new GUILayout.HorizontalScope())
             {
-                EditorGUILayout.TextField("　アイコン画像選択:", m_iconPath);
+                EditorGUILayout.TextField("　アイコン画像:", m_iconPath);
                 if (GUILayout.Button("参照", GUILayout.Width(50), GUILayout.Height(18)))
                 {
                     var defaultDir = System.IO.Path.Combine(Application.dataPath, "GameAssets/Textures");
@@ -162,8 +319,21 @@ namespace SXG2025
                     GUI.FocusControl("");
                 }
             }
+            // プロモーションカード画像
+            using (new GUILayout.HorizontalScope())
+            {
+                EditorGUILayout.TextField("　プロモーションカード画像:", m_promoImagePath);
+                if (GUILayout.Button("参照", GUILayout.Width(50), GUILayout.Height(18)))
+                {
+                    var defaultDir = System.IO.Path.Combine(Application.dataPath, "GameAssets/Textures");
+                    var path = EditorUtility.OpenFilePanel("Select Image", defaultDir, "png,jpg,jpeg");
+                    m_promoImagePath = path.Replace("\\", "/").Replace(Application.dataPath, "Assets");
+                    GUI.FocusControl("");
+                }
+            }
             GUILayout.Label("　※所属名・挑戦者名は、全角半角問わず 最大10文字 としてください。");
             GUILayout.Label("　※アイコン画像ファイルの最大サイズは 256*256 です。");
+            GUILayout.Label("　※プロモーションカード画像ファイルの最大サイズは 960*540 です。");
             GUILayout.Label("　※公序良俗に反する画像や名前は設定しないでください。");
 
             GUILayout.Space(10);
@@ -173,13 +343,86 @@ namespace SXG2025
                 AddParticipant();
             }
         }
+        */
 
         private static int GenerateOtherEntryId()
         {
-            return UnityEngine.Random.Range(0, MAX_ID);
+            return UnityEngine.Random.Range(1, MAX_ID+1);
         }
 
+        private void AddParticipant()
+        {
+            var data = Data.instance;
+            var name = data.GetName();
 
+            var folderPath = $"Assets/Participant/{name}";
+
+            if (Directory.Exists(folderPath))
+            {
+                string error = data.entryMethod == EntryMethod.Connpass
+                    ? $"!!ERROR!!\n\n参加番号:{data.participantID} の戦車は既に作成済みです。 \n- {folderPath}"
+                    : $"!!ERROR!!\n\n参加ID:{data.randomID} の戦車は既に作成済みです。 \n- {folderPath}";
+
+                Debug.LogError(error);
+                EditorUtility.DisplayDialog("挑戦者登録", error, "OK");
+                return;
+            }
+
+            Directory.CreateDirectory(folderPath);
+
+            // アイコン画像
+            if (!string.IsNullOrEmpty(m_iconPath) && File.Exists(m_iconPath))
+            {
+                var ext = Path.GetExtension(m_iconPath);
+                var dstPath = $"{folderPath}/{name}_icon{ext}";
+                File.Copy(m_iconPath, dstPath, true);
+
+                AssetDatabase.Refresh();
+
+                var ti = AssetImporter.GetAtPath(dstPath) as TextureImporter;
+                if (ti != null)
+                {
+                    ti.textureType = TextureImporterType.Sprite;
+                    ti.spriteImportMode = SpriteImportMode.Single;
+                    ti.SaveAndReimport();
+                }
+
+                data.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(dstPath);
+            }
+
+            // プロモ画像
+            if (!string.IsNullOrEmpty(m_promoImagePath) && File.Exists(m_promoImagePath))
+            {
+                var ext = Path.GetExtension(m_promoImagePath);
+                var dstPath = $"{folderPath}/{name}_promo{ext}";
+                File.Copy(m_promoImagePath, dstPath, true); // ←正しいコピー元
+
+                AssetDatabase.Refresh();
+
+                var ti = AssetImporter.GetAtPath(dstPath) as TextureImporter;
+                if (ti != null)
+                {
+                    ti.textureType = TextureImporterType.Sprite;
+                    ti.spriteImportMode = SpriteImportMode.Single;
+                    ti.SaveAndReimport();
+                }
+
+                data.promoCard = AssetDatabase.LoadAssetAtPath<Sprite>(dstPath);
+            }
+
+            // csファイル作成
+            var csTemplatePath = "Assets/BattleTanks/Programs/Editor/SXGParticipant.cs.txt";
+            var csPath = $"{folderPath}/{name}.cs";
+            var csText = File.ReadAllText(csTemplatePath);
+            csText = csText.Replace("#SCRIPTNAME#", name);
+            File.WriteAllText(csPath, csText, Encoding.GetEncoding("utf-8"));
+
+            data.isRunnning = true;
+
+            AssetDatabase.Refresh();
+            CompilationPipeline.RequestScriptCompilation();
+        }
+        /*
         private void AddParticipant()
         {
             var data = Data.instance;
@@ -225,6 +468,25 @@ namespace SXG2025
                 data.sprite = iconAsset;
             }
 
+            // 画像作成
+            if (File.Exists(m_promoImagePath))
+            {
+                var iconExtension = Path.GetExtension(m_promoImagePath);
+                var iconPath = $"{folderPath}/{name}{iconExtension}";
+                File.Copy(m_iconPath, iconPath, true);
+
+                AssetDatabase.Refresh();
+
+                // 画像のテクスチャタイプ変更
+                var textureImporter = AssetImporter.GetAtPath(iconPath) as TextureImporter;
+                textureImporter.textureType = TextureImporterType.Sprite;
+                textureImporter.spriteImportMode = SpriteImportMode.Single;
+                textureImporter.SaveAndReimport();
+
+                var iconAsset = AssetDatabase.LoadAssetAtPath<Sprite>(iconPath);
+                data.promoCard = iconAsset;
+            }
+
             // csファイル作成
             var csTemplatePath = "Assets/BattleTanks/Programs/Editor/SXGParticipant.cs.txt";
             var csPath = $"{folderPath}/{name}.cs";
@@ -237,6 +499,7 @@ namespace SXG2025
             AssetDatabase.Refresh();
             CompilationPipeline.RequestScriptCompilation();
         }
+        */
 
         [DidReloadScripts]
         public static void OnDidReloadScripts()
@@ -272,7 +535,7 @@ namespace SXG2025
                 if (type != null)
                 {
                     var component = contentsRoot.AddComponent(type) as ComPlayerBase;
-                    component.SetPlayerData(data.organization, data.playerName, data.sprite);
+                    component.SetPlayerData(data.organization, data.playerName, data.tankName, data.sprite, data.promoCard);
                 }
 
                 // Prefab作成
@@ -280,7 +543,7 @@ namespace SXG2025
                 var prefabPath = $"{folderPath}/{name}.prefab";
                 PrefabUtility.SaveAsPrefabAsset(contentsRoot, prefabPath);
 
-                PrefabUtility.UnloadPrefabContents(contentsRoot);
+                //PrefabUtility.UnloadPrefabContents(contentsRoot);
 
                 AssetDatabase.Refresh();
 
@@ -341,6 +604,13 @@ namespace SXG2025
             {
                 // アンロードしてメモリ解放 
                 PrefabUtility.UnloadPrefabContents(contentsRoot);
+            }
+            finally
+            {
+                if (contentsRoot != null)
+                {
+                    PrefabUtility.UnloadPrefabContents(contentsRoot);
+                }
             }
 
         }

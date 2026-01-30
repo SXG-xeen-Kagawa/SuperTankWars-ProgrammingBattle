@@ -267,7 +267,7 @@ namespace SXG2025
 
         private IEnumerator CoSceneInit()
         {
-            const float DELAY_TIME = 1.0f;
+            const float DELAY_TIME = 0.1f;
             SoundController.FadeOutBGM();
 
             // 初期化 
@@ -390,6 +390,11 @@ namespace SXG2025
 
             // フェードイン 
             FadeCanvas.Instance.FadeIn();
+            // フェードイン２
+            if (PromoCardsInsert.Check)
+            {
+                PromoCardsInsert.Instance.FadeIn();
+            }
 
             // キー入力待ち 
             while (!WasPressedKey())
@@ -398,6 +403,20 @@ namespace SXG2025
                 UpdateDemoTanksChallengersIntro();
                 yield return null;
             }
+
+            // プロモカード：均等入場 
+            Sprite[] promoCards = new Sprite[m_playerEntrySheetList.Count];
+            for (int i = 0; i < promoCards.Length; ++i)
+            {
+                promoCards[i] = m_playerEntrySheetList[i].m_comPlayer.PromoCardImage;
+            }
+            PromoCardsInsert.Instance.EnterEqualityMode(promoCards);
+            while (!PromoCardsInsert.Instance.IsScreenCovered)
+            {
+                yield return null;
+            }
+            // プロモカード：退場 
+            PromoCardsInsert.Instance.FadeIn();
 
             // キャラカメラを止める
             foreach (var charaCamera in m_charaRenderCameraList)
@@ -897,8 +916,20 @@ namespace SXG2025
         private IEnumerator CoSceneFinish()
         {
             // フェードアウト 
-            FadeCanvas.Instance.FadeOut();
-            yield return new WaitForSeconds(0.5f);
+            //FadeCanvas.Instance.FadeOut();
+            //yield return new WaitForSeconds(0.5f);
+
+            // プロモカード：チャンピオン入場 
+            Sprite[] promoCards = new Sprite[m_playerEntrySheetList.Count];
+            for (int i = 0; i < promoCards.Length; ++i)
+            {
+                promoCards[i] = m_playerEntrySheetList[i].m_comPlayer.PromoCardImage;
+            }
+            PromoCardsInsert.Instance.EnterChampionMode(promoCards, GameConfigSetting.Instance.Ranking);
+            while (!PromoCardsInsert.Instance.IsScreenCovered)
+            {
+                yield return null;
+            }
 
             // 物理処理をリセット 
             Physics.simulationMode = SimulationMode.FixedUpdate;

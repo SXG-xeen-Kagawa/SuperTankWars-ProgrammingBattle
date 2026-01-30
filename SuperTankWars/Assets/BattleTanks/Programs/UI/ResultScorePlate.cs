@@ -38,7 +38,7 @@ namespace SXG2025
             public void Setup(int teamNo, Color teamColor)
             {
                 m_plateImage.sprite = m_plateSprites[teamNo];
-                m_text.color = teamColor;
+                //m_text.color = teamColor;
 
                 m_totalScore = 0;
                 m_targetScore = 0;
