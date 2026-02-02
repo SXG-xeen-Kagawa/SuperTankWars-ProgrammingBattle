@@ -8,6 +8,9 @@ namespace SXG2025
 
     public class CannonShell : MonoBehaviour
     {
+        [SerializeField] private TrailRenderer m_trailRenderer;
+        [SerializeField] private Color[] m_trailColors;
+
         public delegate void OnEraseDelegate(CannonShell shell);    // 削除時のデリゲート 
 
 
@@ -58,6 +61,16 @@ namespace SXG2025
             m_rigidbody.AddForce(transform.forward * velocity, ForceMode.VelocityChange);
             m_eraseFunc = eraseFunc;
             m_teamNo = teamNo;
+
+            if (m_trailRenderer != null)
+            {
+                if (0 <= teamNo && teamNo < m_trailColors.Length)
+                {
+                    m_trailRenderer.startColor = m_trailColors[teamNo];
+                    m_trailRenderer.endColor = m_trailColors[teamNo];
+                }
+                m_trailRenderer.Clear();
+            }
         }
 
 
