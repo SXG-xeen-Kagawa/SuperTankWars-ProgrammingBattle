@@ -23,7 +23,6 @@ namespace SXG2025
         [SerializeField] private TankScoreRootUI m_tankScoreRootUI = null;
         [SerializeField] private ChallengersIntroScreen m_challengersIntroScreenUI = null;
         [SerializeField] private GameSetUI m_gameSetUI = null;
-        [SerializeField] private ResultScreen m_resultScreenUI = null;
         [SerializeField] private UI.ResultScreen2 m_resultScreen2UI = null;
         [SerializeField] private CanvasController m_mainCanvasController = null;
 
@@ -248,9 +247,6 @@ namespace SXG2025
                     case SceneFlow.Playing:
                         StartCoroutine(CoScenePlaying());
                         break;
-                    //case SceneFlow.Result:
-                    //    StartCoroutine(CoSceneResult());
-                    //    break;
                     case SceneFlow.Result2:
                         StartCoroutine(CoSceneResult2());
                         break;
@@ -406,7 +402,7 @@ namespace SXG2025
 
             // プロモカード：均等入場 
             Sprite[] promoCards = new Sprite[m_playerEntrySheetList.Count];
-            for (int i = 0; i < promoCards.Length; ++i)
+            for (int i=0; i < promoCards.Length; ++i)
             {
                 promoCards[i] = m_playerEntrySheetList[i].m_comPlayer.PromoCardImage;
             }

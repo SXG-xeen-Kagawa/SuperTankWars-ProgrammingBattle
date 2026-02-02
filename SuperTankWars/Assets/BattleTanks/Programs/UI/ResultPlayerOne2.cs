@@ -20,8 +20,8 @@ namespace SXG2025
 
             [SerializeField] private ResultScorePlate m_resultScorePlate = null;
             [SerializeField] private ResultRanking m_ranking = null;
+            [SerializeField] private ResultTankName m_tankName = null;
 
-            [SerializeField] private Sprite[] m_rankingSprites;
 
             private Vector2 m_gaugePosition = Vector2.zero;
             private Vector2 m_facePosition = Vector2.zero;
@@ -48,6 +48,7 @@ namespace SXG2025
 
                 m_namePlate.Setup(comPlayer, teamNo, teamColor);
                 m_resultScorePlate.Setup(teamNo, teamColor);
+                m_tankName.Setup(comPlayer, teamNo);
             }
 
 

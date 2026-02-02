@@ -19,6 +19,10 @@ namespace SXG2025
         [SerializeField] private TextMeshProUGUI m_textPlayerName = null;
         [SerializeField] private Image m_iconImage = null;
 
+        [SerializeField] private Sprite[] m_tankNameBaseSprites;
+        [SerializeField] private Image m_tankNameBase = null;
+        [SerializeField] private TextMeshProUGUI m_textTankName = null;
+
 
         public struct TankSpecInfo
         {
@@ -56,6 +60,10 @@ namespace SXG2025
                 specInfo.m_cost, specInfo.m_turretCount, specInfo.m_rotatorCount, specInfo.m_armorCount);
             m_textLifeCount.text = string.Format("出撃可能回数：<size=40>{0}</size>回",
                  specInfo.m_sortieCount);
+
+            // 戦車名 
+            m_tankNameBase.sprite = m_tankNameBaseSprites[teamNo];
+            m_textTankName.text = comPlayer.TankName;
         }
 
     }
