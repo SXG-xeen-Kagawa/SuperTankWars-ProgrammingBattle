@@ -71,4 +71,4 @@ Projectウィンドウで `Assets/Participant/` を開きます。
 
 運営からの連絡はイベントページ等で行います。
 
-- connpassページ：**【後でURLを入れます】**
+- connpassページ：**https://connpass.com/event/382844/**
