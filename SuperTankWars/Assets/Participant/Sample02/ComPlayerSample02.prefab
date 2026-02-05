@@ -269,7 +269,7 @@ MonoBehaviour:
   m_yourName: "\u30B5\u30F3\u30D7\u30EB02"
   m_tankName: "X \u30A2\u30FC\u30DE\u30FC"
   m_faceImage: {fileID: 21300000, guid: 51a03701744ffb64398e87dc38c68f9f, type: 3}
-  m_promoCardImage: {fileID: 21300000, guid: dd782fcc452798c42886dcf1be5ef0a5, type: 3}
+  m_promoCardImage: {fileID: 0}
   m_turrets:
   - {fileID: 9116201736561824935}
   m_rotJoints: []

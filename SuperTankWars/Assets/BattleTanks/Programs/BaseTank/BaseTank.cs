@@ -199,6 +199,9 @@ namespace SXG2025
                     case TurretControlMode.Direction:
                         turretPart.ControlDirectDirection(turretData.m_targetYawAngle, turretData.m_targetPitchAngle);
                         break;
+                    case TurretControlMode.TargetAngle:
+                        turretPart.ControlTargetLocalAngle(turretData.m_targetYawAngle, turretData.m_targetPitchAngle);
+                        break;
                     case TurretControlMode.TargetPoint:
                         turretPart.ControlTargetPoint(turretData.m_targetPoint);
                         break;

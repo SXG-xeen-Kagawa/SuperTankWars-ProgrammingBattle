@@ -1149,6 +1149,7 @@ MonoBehaviour:
   m_destroiedTankUiPrefab: {fileID: 6279201930363970732, guid: ca14eb7bfdabdf743a17773062920537, type: 3}
   m_debugMarkerPrefab: {fileID: 5473048911649083521, guid: 6cd9326b464b53341bec0c6f2105163b, type: 3}
   m_promoCardsInsertPrefab: {fileID: 6971098650567603861, guid: 23facab7a63df09489aa70407a9d2e30, type: 3}
+  m_promoCardRenderCameraPrefab: {fileID: 6934523177846906719, guid: ead75833fbd990f4793ecfebe41ce055, type: 3}
 --- !u!4 &1231818770
 Transform:
   m_ObjectHideFlags: 0

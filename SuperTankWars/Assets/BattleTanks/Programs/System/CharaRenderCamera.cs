@@ -49,6 +49,25 @@ namespace SXG2025
 
 
         /// <summary>
+        /// @memo MemoryProfilerで確認してもRenderTextureが溜まることは無かったが保険処理を入れておく
+        /// </summary>
+        private void OnDestroy()
+        {
+            if (m_camera != null && m_camera.targetTexture == m_renderTexture)
+            {
+                m_camera.targetTexture = null;
+            }
+
+            if (m_renderTexture != null)
+            {
+                m_renderTexture.Release();
+                Destroy(m_renderTexture);
+                m_renderTexture = null;
+            }
+        }
+
+
+        /// <summary>
         /// レンダリング開始 
         /// </summary>
         /// <param name="targetCharaTr"></param>

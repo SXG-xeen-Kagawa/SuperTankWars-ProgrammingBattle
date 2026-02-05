@@ -78,6 +78,13 @@ namespace SXG2025
         [SerializeField] private PromoCardsInsert m_promoCardsInsertPrefab = null;
         public PromoCardsInsert PromoCardsInsertPrefab => m_promoCardsInsertPrefab;
 
+
+        /// <summary>
+        /// プロモカード描画用のRenderCameraクラス 
+        /// </summary>
+        [SerializeField] private PromoCardRenderCamera m_promoCardRenderCameraPrefab = null;
+        public PromoCardRenderCamera PromoCardRenderCameraPrefab => m_promoCardRenderCameraPrefab;
+
     }
 
 

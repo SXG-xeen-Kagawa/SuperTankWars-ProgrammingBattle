@@ -62,6 +62,11 @@ namespace SXG2025
         static GUIStyle m_costValueStyle;
         static GUIStyle m_costValueWarningStyle;
 
+        // ----------------------------
+        // 追加：パネル最小化
+        // ----------------------------
+        static bool m_panelMinimized = false;
+
 
 
         static EditComPlayerSceneGui()
@@ -75,9 +80,22 @@ namespace SXG2025
 
         static void OnEditorChangeEvent()
         {
-            // 直接再計算を呼ぶ
-            RecalculateCostIfNeeded(Selection.activeGameObject, force: true);
+            PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
+            if (stage == null) return;
+
+            var root = stage.prefabContentsRoot;
+            if (root == null) return;
+
+            var comPlayer = root.GetComponent<ComPlayerBase>();
+            if (comPlayer == null) return;
+
+            // 即時修正（ログは普段は静かに）
+            EnforceParentRuleByLifting(stage, comPlayer, showLog: false);
+
+            // コスト再計算（選択依存を排除）
+            RecalculateCostIfNeeded(root, force: true);
         }
+
 
         static void RemakeStyles()
         {
@@ -162,7 +180,11 @@ namespace SXG2025
                 // 画面サイズに合わせてパネルの最大幅を制限（邪魔になりにくい）
                 float maxWidth = Mathf.Min(420f, sv.position.width * 0.85f);
                 m_panelRect.width = maxWidth;
-                m_panelRect.height = 240.0f;
+
+                // ----------------------------
+                // 変更：最小化時は高さを小さくする
+                // ----------------------------
+                m_panelRect.height = m_panelMinimized ? 72.0f : 240.0f;
 
                 // 枠（重いGUI.skin.boxより軽いスタイルに寄せる）
                 var panelStyle = new GUIStyle(EditorStyles.helpBox);
@@ -170,7 +192,6 @@ namespace SXG2025
 
                 // 先にArea開始
                 GUILayout.BeginArea(m_panelRect, panelStyle);
-                m_panelScroll = GUILayout.BeginScrollView(m_panelScroll, false, true);
 
                 //------------------------------
                 // ヘッダー（ドラッグ＆最小化）
@@ -181,6 +202,18 @@ namespace SXG2025
 
                     GUILayout.FlexibleSpace();
 
+                    // ----------------------------
+                    // 追加：最小化ボタン（説明不要のUI）
+                    // ----------------------------
+                    string btn = m_panelMinimized ? "＋" : "－";
+                    if (GUILayout.Button(btn, EditorStyles.miniButton, GUILayout.Width(26)))
+                    {
+                        m_panelMinimized = !m_panelMinimized;
+                        sv.Repaint();
+
+                        // ボタン押下とドラッグ開始が競合しやすいので、ここでGUIを抜ける
+                        GUIUtility.ExitGUI();
+                    }
                 }
 
                 // ヘッダー行でドラッグ移動できるようにする
@@ -214,178 +247,241 @@ namespace SXG2025
                     m_isDraggingPanel = false;
                 }
 
-
-                GUILayout.Space(6);
-
-                //--------------------------------------------------
-                // 状態：Cost / 出撃回数（強調版）
-                //--------------------------------------------------
-                bool isCostOver = false;
-
-                using (new GUILayout.HorizontalScope())
+                // ----------------------------
+                // 変更：最小化中は「Cost行」と「砲塔数行」だけ表示する
+                // ----------------------------
+                if (m_panelMinimized)
                 {
-                    GUILayout.Label("Cost:", m_costLabelStyle, GUILayout.Width(40));
+                    GUILayout.Space(2);
 
-                    if (m_lastCost <= GameConstants.DEFAULT_PLAYER_ENERGY)
+                    //--------------------------------------------------
+                    // 状態：Cost / 出撃回数（強調版）※最小化中も表示
+                    //--------------------------------------------------
+                    bool isCostOver = false;
+
+                    using (new GUILayout.HorizontalScope())
                     {
-                        GUILayout.Label(m_lastCost.ToString(), m_costValueStyle, GUILayout.Width(54));
-                    }
-                    else
-                    {
-                        GUILayout.Label(m_lastCost.ToString(), m_costValueWarningStyle, GUILayout.Width(54));
-                        isCostOver = true;
-                    }
+                        GUILayout.Label("Cost:", m_costLabelStyle, GUILayout.Width(40));
 
-                    GUILayout.Space(10);
-
-                    GUILayout.Label("出撃回数:", m_costLabelStyle, GUILayout.Width(58));
-                    if (0 < m_lastCost)
-                    {
-                        GUILayout.Label((GameConstants.DEFAULT_PLAYER_ENERGY / m_lastCost).ToString(), m_costValueStyle, GUILayout.Width(32));
-                    }
-                    else
-                    {
-                        GUILayout.Label("-", m_costValueStyle, GUILayout.Width(32));
-                    }
-
-                    if (isCostOver)
-                    {
-                        GUILayout.Space(8);
-                        GUILayout.Label("COST OVER", m_costValueWarningStyle);
-                    }
-
-                    GUILayout.FlexibleSpace();
-                }
-
-                GUILayout.Label(string.Format("砲塔:{0} / 回転:{1} / 装備:{2} / 質量:{3}Kg",
-                    m_countOfTurrets, m_countOfRotators, m_countOfArmors, m_tankMass));
-
-                GUILayout.Space(6);
-
-                //--------------------------------------------------
-                // おすすめ手順（デフォルト閉：邪魔になりやすいので）
-                //--------------------------------------------------
-                m_showGuide = EditorGUILayout.Foldout(m_showGuide, "おすすめ手順", true);
-                if (m_showGuide)
-                {
-                    EditorGUILayout.HelpBox(
-                        "① 砲塔を追加して位置を調整します\n" +
-                        "② 装甲などで見た目を整えます\n" +
-                        "③ ▶ 再生して動かしてみます（ゲームパッド操作）\n" +
-                        "④ ①〜③を繰り返して調整します\n" +
-                        "⑤ AI（戦い方）を調整します",
-                        MessageType.None);
-                }
-
-                GUILayout.Space(4);
-
-                //--------------------------------------------------
-                // 作る（砲塔・回転部位）
-                //--------------------------------------------------
-                GUILayout.Label("作る（砲塔・装甲・回転部位）", EditorStyles.boldLabel);
-                using (new GUILayout.HorizontalScope())
-                {
-                    if (GUILayout.Button("砲塔追加", GUILayout.Width(108)))
-                    {
-                        CompactArray(comPlayer);
-                        TryAddTurretToTankInPrefabStage(comPlayer, stage);
-                    }
-                    if (GUILayout.Button("装甲(Cube)追加", GUILayout.Width(108)))
-                    {
-                        TryAddArmorCubeToTankInPrefabStage(comPlayer, stage);
-                    }
-                    if (GUILayout.Button("回転部位追加", GUILayout.Width(108)))
-                    {
-                        CompactArray(comPlayer);
-                        TryAddRotatorToTankInPrefabStage(comPlayer, stage);
-                    }
-                    GUILayout.FlexibleSpace();
-                }
-
-                GUILayout.Space(4);
-
-                //--------------------------------------------------
-                // 整える（チェック）
-                //--------------------------------------------------
-                GUILayout.Label("整える（チェック）", EditorStyles.boldLabel);
-                using (new GUILayout.HorizontalScope())
-                {
-                    if (GUILayout.Button("要素チェック", GUILayout.Width(92)))
-                    {
-                        bool isUpdate = false;
-
-                        if (comPlayer.transform.localPosition != Vector3.zero || comPlayer.transform.localRotation != Quaternion.identity)
+                        if (m_lastCost <= GameConstants.DEFAULT_PLAYER_ENERGY)
                         {
-                            comPlayer.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-                            EditorUtility.SetDirty(comPlayer);
-                            isUpdate = true;
+                            GUILayout.Label(m_lastCost.ToString(), m_costValueStyle, GUILayout.Width(54));
+                        }
+                        else
+                        {
+                            GUILayout.Label(m_lastCost.ToString(), m_costValueWarningStyle, GUILayout.Width(54));
+                            isCostOver = true;
                         }
 
-                        if (CompactArray(comPlayer))
+                        GUILayout.Space(10);
+
+                        GUILayout.Label("出撃回数:", m_costLabelStyle, GUILayout.Width(58));
+                        if (0 < m_lastCost)
                         {
-                            isUpdate = true;
+                            GUILayout.Label((GameConstants.DEFAULT_PLAYER_ENERGY / m_lastCost).ToString(), m_costValueStyle, GUILayout.Width(32));
+                        }
+                        else
+                        {
+                            GUILayout.Label("-", m_costValueStyle, GUILayout.Width(32));
                         }
 
-                        if (isUpdate)
+                        if (isCostOver)
                         {
-                            EditorSceneManager.MarkSceneDirty(stage.scene);
+                            GUILayout.Space(8);
+                            GUILayout.Label("COST OVER", m_costValueWarningStyle);
+                        }
+
+                        GUILayout.FlexibleSpace();
+                    }
+
+                    //--------------------------------------------------
+                    // 砲塔数などの行 ※最小化中も表示
+                    //--------------------------------------------------
+                    GUILayout.Label(string.Format("砲塔:{0} / 回転:{1} / 装備:{2} / 質量:{3}Kg",
+                        m_countOfTurrets, m_countOfRotators, m_countOfArmors, m_tankMass), EditorStyles.miniLabel);
+                }
+                else
+                {
+                    // 通常表示（今まで通り）
+                    m_panelScroll = GUILayout.BeginScrollView(m_panelScroll, false, true);
+
+                    GUILayout.Space(6);
+
+                    //--------------------------------------------------
+                    // 状態：Cost / 出撃回数（強調版）
+                    //--------------------------------------------------
+                    bool isCostOver = false;
+
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        GUILayout.Label("Cost:", m_costLabelStyle, GUILayout.Width(40));
+
+                        if (m_lastCost <= GameConstants.DEFAULT_PLAYER_ENERGY)
+                        {
+                            GUILayout.Label(m_lastCost.ToString(), m_costValueStyle, GUILayout.Width(54));
+                        }
+                        else
+                        {
+                            GUILayout.Label(m_lastCost.ToString(), m_costValueWarningStyle, GUILayout.Width(54));
+                            isCostOver = true;
+                        }
+
+                        GUILayout.Space(10);
+
+                        GUILayout.Label("出撃回数:", m_costLabelStyle, GUILayout.Width(58));
+                        if (0 < m_lastCost)
+                        {
+                            GUILayout.Label((GameConstants.DEFAULT_PLAYER_ENERGY / m_lastCost).ToString(), m_costValueStyle, GUILayout.Width(32));
+                        }
+                        else
+                        {
+                            GUILayout.Label("-", m_costValueStyle, GUILayout.Width(32));
+                        }
+
+                        if (isCostOver)
+                        {
+                            GUILayout.Space(8);
+                            GUILayout.Label("COST OVER", m_costValueWarningStyle);
+                        }
+
+                        GUILayout.FlexibleSpace();
+                    }
+
+                    GUILayout.Label(string.Format("砲塔:{0} / 回転:{1} / 装備:{2} / 質量:{3}Kg",
+                        m_countOfTurrets, m_countOfRotators, m_countOfArmors, m_tankMass));
+
+                    GUILayout.Space(6);
+
+                    //--------------------------------------------------
+                    // おすすめ手順（デフォルト閉：邪魔になりやすいので）
+                    //--------------------------------------------------
+                    m_showGuide = EditorGUILayout.Foldout(m_showGuide, "おすすめ手順", true);
+                    if (m_showGuide)
+                    {
+                        EditorGUILayout.HelpBox(
+                            "① 砲塔を追加して位置を調整します\n" +
+                            "② 装甲などで見た目を整えます\n" +
+                            "③ ▶ 再生して動かしてみます（ゲームパッド操作）\n" +
+                            "④ ①〜③を繰り返して調整します\n" +
+                            "⑤ AI（戦い方）を調整します",
+                            MessageType.None);
+                    }
+
+                    GUILayout.Space(4);
+
+                    //--------------------------------------------------
+                    // 作る（砲塔・回転部位）
+                    //--------------------------------------------------
+                    GUILayout.Label("作る（砲塔・装甲・回転部位）", EditorStyles.boldLabel);
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        if (GUILayout.Button("砲塔追加", GUILayout.Width(108)))
+                        {
+                            CompactArray(comPlayer);
+                            TryAddTurretToTankInPrefabStage(comPlayer, stage);
+                        }
+                        if (GUILayout.Button("装甲(Cube)追加", GUILayout.Width(108)))
+                        {
+                            TryAddArmorCubeToTankInPrefabStage(comPlayer, stage);
+                        }
+                        if (GUILayout.Button("回転部位追加", GUILayout.Width(108)))
+                        {
+                            CompactArray(comPlayer);
+                            TryAddRotatorToTankInPrefabStage(comPlayer, stage);
+                        }
+                        GUILayout.FlexibleSpace();
+                    }
+
+                    GUILayout.Space(4);
+
+                    //--------------------------------------------------
+                    // 整える（チェック）
+                    //--------------------------------------------------
+                    GUILayout.Label("整える（チェック）", EditorStyles.boldLabel);
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        if (GUILayout.Button("要素チェック", GUILayout.Width(92)))
+                        {
+                            bool isUpdate = false;
+
+                            if (comPlayer.transform.localPosition != Vector3.zero || comPlayer.transform.localRotation != Quaternion.identity)
+                            {
+                                comPlayer.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                                EditorUtility.SetDirty(comPlayer);
+                                isUpdate = true;
+                            }
+
+                            if (CompactArray(comPlayer))
+                            {
+                                isUpdate = true;
+                            }
+
+                            if (EnforceParentRuleByLifting(stage, comPlayer, showLog: true))
+                            {
+                                isUpdate = true;
+                            }
+
+                            if (isUpdate)
+                            {
+                                EditorSceneManager.MarkSceneDirty(stage.scene);
+                            }
+                        }
+
+                        string collisionBtn = m_showCollision ? "コリジョン非表示" : "コリジョン表示";
+                        if (GUILayout.Button(collisionBtn, GUILayout.Width(120)))
+                        {
+                            m_showCollision = !m_showCollision;
+                            SceneView.RepaintAll();
+                        }
+
+                        GUILayout.FlexibleSpace();
+                    }
+
+                    // Save案内は “常時HelpBox” だと面積を食うので、短いLabelに
+                    GUILayout.Label("※変更後は右上の「Save」で保存します。", EditorStyles.miniLabel);
+
+                    GUILayout.Space(6);
+
+                    //--------------------------------------------------
+                    // AI（慣れてきたら）
+                    //--------------------------------------------------
+                    m_showEasyAI = EditorGUILayout.Foldout(m_showEasyAI, "AI（戦い方）を調整する", true);
+                    if (m_showEasyAI)
+                    {
+                        EditorGUILayout.HelpBox(
+                            "プログラムが苦手な人でも、選ぶだけで戦い方（AI）を調整できます。\n" +
+                            "プログラムのアイデアが欲しい人にもおすすめです。\n" +
+                            "※上書きは編集画面の「適用」を押したときです（開くだけでは変わりません）。",
+                            MessageType.Info);
+
+                        if (GUILayout.Button(m_easyEditButtonContent, GUILayout.Height(24), GUILayout.Width(220)))
+                        {
+                            EasyProgramEditorWindow.Open(comPlayer);
                         }
                     }
 
-                    string collisionBtn = m_showCollision ? "コリジョン非表示" : "コリジョン表示";
-                    if (GUILayout.Button(collisionBtn, GUILayout.Width(120)))
+
+                    //--------------------------------------------------
+                    // 提出用出力
+                    //--------------------------------------------------
+                    GUILayout.Space(8);
+                    m_showSubmission = EditorGUILayout.Foldout(m_showSubmission, "提出（ZIP出力）", true);
+                    if (m_showSubmission)
                     {
-                        m_showCollision = !m_showCollision;
-                        SceneView.RepaintAll();
+                        EditorGUILayout.HelpBox(
+                            "この戦車のフォルダを提出用ZIPにまとめます。\n" +
+                            "※デスクトップに出力します（Backupは含めません）。",
+                            MessageType.None);
+
+                        if (GUILayout.Button("提出用ZIPを作成", GUILayout.Width(160)))
+                        {
+                            TryCreateSubmissionZipFromCurrentPrefabStage(stage);
+                        }
                     }
 
-                    GUILayout.FlexibleSpace();
+                    GUILayout.EndScrollView();
                 }
 
-                // Save案内は “常時HelpBox” だと面積を食うので、短いLabelに
-                GUILayout.Label("※変更後は右上の「Save」で保存します。", EditorStyles.miniLabel);
-
-                GUILayout.Space(6);
-
-                //--------------------------------------------------
-                // AI（慣れてきたら）
-                //--------------------------------------------------
-                m_showEasyAI = EditorGUILayout.Foldout(m_showEasyAI, "AI（戦い方）を調整する", true);
-                if (m_showEasyAI)
-                {
-                    EditorGUILayout.HelpBox(
-                        "プログラムが苦手な人でも、選ぶだけで戦い方（AI）を調整できます。\n" +
-                        "プログラムのアイデアが欲しい人にもおすすめです。\n" +
-                        "※上書きは編集画面の「適用」を押したときです（開くだけでは変わりません）。",
-                        MessageType.Info);
-
-                    if (GUILayout.Button(m_easyEditButtonContent, GUILayout.Height(24), GUILayout.Width(220)))
-                    {
-                        EasyProgramEditorWindow.Open(comPlayer);
-                    }
-                }
-
-
-                //--------------------------------------------------
-                // 提出用出力
-                //--------------------------------------------------
-                GUILayout.Space(8);
-                m_showSubmission = EditorGUILayout.Foldout(m_showSubmission, "提出（ZIP出力）", true);
-                if (m_showSubmission)
-                {
-                    EditorGUILayout.HelpBox(
-                        "この戦車のフォルダを提出用ZIPにまとめます。\n" +
-                        "※デスクトップに出力します（Backupは含めません）。",
-                        MessageType.None);
-
-                    if (GUILayout.Button("提出用ZIPを作成", GUILayout.Width(160)))
-                    {
-                        TryCreateSubmissionZipFromCurrentPrefabStage(stage);
-                    }
-                }
-
-                // Area終了
-                GUILayout.EndScrollView();
                 GUILayout.EndArea();
 
                 Handles.EndGUI();
@@ -395,16 +491,19 @@ namespace SXG2025
             // エラーオブジェクト 
             if (0 < m_errorObjectList.Count)
             {
+                // ※OnSceneGUI内GUILayoutはBeginGUI/EndGUIで囲うほうが安全です
+                Handles.BeginGUI();
                 GUILayout.BeginArea(new Rect(50, 150, 400, 64), GUI.skin.box);
                 GUILayout.Label("規定違反パーツ (" + m_errorObjectList.Count + "個)", m_warningValueStyle);
                 GUILayout.BeginHorizontal();
-                for (int i=0; i < m_errorObjectList.Count; ++i)
+                for (int i = 0; i < m_errorObjectList.Count; ++i)
                 {
                     var errorObj = m_errorObjectList[i];
-                    GUILayout.Label(string.Format("{0} ", (errorObj != null)? errorObj.name: "---"), m_warningValueStyle);
+                    GUILayout.Label(string.Format("{0} ", (errorObj != null) ? errorObj.name : "---"), m_warningValueStyle);
                 }
                 GUILayout.EndHorizontal();
                 GUILayout.EndArea();
+                Handles.EndGUI();
             }
 
 
@@ -434,7 +533,8 @@ namespace SXG2025
                 if (0 < m_errorObjectList.Count)
                 {
                     Handles.color = Color.red;  // 規定違反がある場合は枠線を赤にする 
-                } else
+                }
+                else
                 {
                     //Handles.color = Color.white;
                     Handles.color = new Color(0.5f, 1.0f, 0.7f);
@@ -509,7 +609,7 @@ namespace SXG2025
                     return;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError("砲塔のインスタンス化に失敗：" + ex);
                 return;
@@ -758,7 +858,7 @@ namespace SXG2025
         /// <param name="root"></param>
         /// <param name="tankWrapper"></param>
         /// <param name="force"></param>
-        static void RecalculateCostIfNeeded(GameObject root, bool force=false)
+        static void RecalculateCostIfNeeded(GameObject root, bool force = false)
         {
             if (root == null) return;
             ComPlayerBase comPlayer = root.GetComponent<ComPlayerBase>();
@@ -774,7 +874,7 @@ namespace SXG2025
 
                 // コスト再計算 
                 m_lastHash = h;
-                m_lastCost = BaseTank.SystemCalculateTankCost(comPlayer, 
+                m_lastCost = BaseTank.SystemCalculateTankCost(comPlayer,
                     out m_countOfTurrets, out m_countOfRotators, out m_countOfArmors, out m_tankMass,
                     dataTank, m_errorObjectList);
                 //m_lastCost = ComputeCost(root);
@@ -803,7 +903,7 @@ namespace SXG2025
                 foreach (var mf in root.GetComponentsInChildren<MeshFilter>(true))
                 {
                     var m = mf.sharedMesh;
-                    int id = (m != null)? m.GetInstanceID() : 0;
+                    int id = (m != null) ? m.GetInstanceID() : 0;
                     int vc = (m != null) ? m.vertexCount : 0;
                     hash = hash * 31 + id;
                     hash = hash * 31 + vc;
@@ -868,7 +968,7 @@ namespace SXG2025
             var array = so.FindProperty(propertyName);
             if (array == null || !array.isArray) return;
 
-            for (int i=0; i < array.arraySize; ++i)
+            for (int i = 0; i < array.arraySize; ++i)
             {
                 var element = array.GetArrayElementAtIndex(i);
                 if (element != null)
@@ -1051,6 +1151,90 @@ namespace SXG2025
                 EditorUtility.ClearProgressBar();
             }
         }
+
+
+
+        #region 大砲と回転パーツの階層調整
+
+        static bool IsAllowedParentForTurretOrRotator(Transform parent, Transform rootTr)
+        {
+            if (parent == null) return false;
+            if (parent == rootTr) return true; // ルート直下 OK
+            if (parent.GetComponent<RotJointPart>() != null) return true; // 回転パーツ直下 OK
+            return false;
+        }
+
+        /// <summary>
+        /// 砲塔（TurretPart）と回転（RotJointPart）を、
+        /// 「ルート直下」または「回転パーツ直下」になるまで、親を1つずつ上げて自動修正する
+        /// </summary>
+        static bool EnforceParentRuleByLifting(PrefabStage stage, ComPlayerBase comPlayer, bool showLog)
+        {
+            if (stage == null || comPlayer == null) return false;
+
+            var root = stage.prefabContentsRoot;
+            if (root == null) return false;
+
+            bool changed = false;
+            var rootTr = root.transform;
+
+            // コンポーネントで判定（名前に依存しない）
+            var turrets = rootTr.GetComponentsInChildren<TurretPart>(true);
+            var rotators = rootTr.GetComponentsInChildren<RotJointPart>(true);
+
+            // Transform単位でまとめる（重複回避）
+            var set = new HashSet<Transform>();
+            foreach (var t in turrets) if (t != null) set.Add(t.transform);
+            foreach (var r in rotators) if (r != null) set.Add(r.transform);
+
+            foreach (var tr in set)
+            {
+                if (tr == null) continue;
+                if (tr == rootTr) continue;
+
+                // 許可される親になるまで、階層を一つ上げる
+                int safety = 64;
+                while (!IsAllowedParentForTurretOrRotator(tr.parent, rootTr) && safety-- > 0)
+                {
+                    var oldParent = tr.parent;
+                    if (oldParent == null) break;
+
+                    var newParent = oldParent.parent;
+                    if (newParent == null)
+                    {
+                        // ルート外にいたら強制的にPrefabルート直下へ
+                        newParent = rootTr;
+                    }
+
+                    Undo.SetTransformParent(tr, newParent, "Lift Turret/Rotator Parent");
+                    tr.SetParent(newParent, true); // worldPositionStays = true
+
+                    changed = true;
+
+                    // これ以上上げられないなら終了
+                    if (newParent == rootTr) break;
+                }
+            }
+
+            if (changed)
+            {
+                EditorSceneManager.MarkSceneDirty(stage.scene);
+                EditorUtility.SetDirty(comPlayer);
+
+                if (showLog)
+                {
+                    Debug.LogWarning(
+                        "砲塔（TurretPart）と回転パーツ（RotJointPart）は「ルート直下」または「回転パーツ直下」にのみ配置できます。\n" +
+                        "ルール外の階層にあったため、自動で階層を持ち上げて修正しました。"
+                    );
+                }
+            }
+
+            return changed;
+        }
+
+        #endregion
+
     }
 
 }

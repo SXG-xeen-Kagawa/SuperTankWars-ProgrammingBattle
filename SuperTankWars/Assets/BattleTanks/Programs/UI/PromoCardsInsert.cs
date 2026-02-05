@@ -9,8 +9,7 @@ namespace SXG2025
 
     public class PromoCardsInsert : MonoBehaviour
     {
-        [SerializeField] private Image[] m_promoCardBases;
-        [SerializeField] private Image[] m_promoCardImages;
+        [SerializeField] private PromoCardOne[] m_promoCards;
 
         private List<RectTransform> m_cardsTrList = new();
         private List<Vector2> m_cardsBasePosList = new();
@@ -57,7 +56,7 @@ namespace SXG2025
         {
             m_canvasGroup = GetComponent<CanvasGroup>();
 
-            foreach (var card in m_promoCardBases)
+            foreach (var card in m_promoCards)
             {
                 m_cardsTrList.Add(card.GetComponent<RectTransform>());
             }
@@ -70,13 +69,6 @@ namespace SXG2025
 
 
 
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
-        void Start()
-        {
-
-            //StartCoroutine(CoEnter0());
-            //StartCoroutine(CoEnter1(GetDebugRandomRanking()));
-        }
 
 
         private void ResetCardsBasePosition(float positionScale=1.0f)
@@ -84,7 +76,7 @@ namespace SXG2025
             m_cardsBasePosList.Clear();
             int offset = Random.Range(0, 4);
             float rad = Mathf.PI / 4.0f + offset * (Mathf.PI / 2.0f);
-            for (int i = 0; i < m_promoCardBases.Length; ++i)
+            for (int i = 0; i < m_promoCards.Length; ++i)
             {
                 Vector2 basePos = Vector2.zero;
                 basePos.x = (0 < Mathf.Cos(rad)) ? (CARD_IMAGE_WIDTH * 0.5f) : -(CARD_IMAGE_WIDTH * 0.5f);
@@ -104,14 +96,13 @@ namespace SXG2025
         /// プロモカードの画像割り当て 
         /// </summary>
         /// <param name="promoCardSprites"></param>
-        private void SetPromoCardSprites(Sprite[] promoCardSprites)
+        private void SetPromoCardSprites(Sprite[] promoCardSprites, Color[] teamColors)
         {
             for (int i = 0; i < promoCardSprites.Length; ++i)
             {
-                if (i < m_promoCardImages.Length)
+                if (i < m_promoCards.Length)
                 {
-                    m_promoCardImages[i].sprite = promoCardSprites[i];
-                    m_promoCardImages[i].preserveAspect = true;
+                    m_promoCards[i].SetImage(promoCardSprites[i], PromoCardRenderCamera.Instance.GetTexture(i), teamColors[i]);
                 }
             }
         }
@@ -131,14 +122,14 @@ namespace SXG2025
         /// 均等モードで入場 
         /// </summary>
         /// <param name="promoCardSprites"></param>
-        internal void EnterEqualityMode(Sprite[] promoCardSprites)
+        internal void EnterEqualityMode(Sprite[] promoCardSprites, Color[] teamColors)
         {
             gameObject.SetActive(true);
             m_isScreenCovered = false;
             m_fadeInFlag = false;
 
             // 画像設定 
-            SetPromoCardSprites(promoCardSprites);
+            SetPromoCardSprites(promoCardSprites, teamColors);
 
             // 入場スタート 
             StartCoroutine(CoEnter0());
@@ -210,14 +201,14 @@ namespace SXG2025
 
         #region ---------- 優勝決定後の入退場 ----------
 
-        internal void EnterChampionMode(Sprite[] promoCardSprites, int[] ranking)
+        internal void EnterChampionMode(Sprite[] promoCardSprites, Color[] teamColors, int[] ranking)
         {
             m_isScreenCovered = false;
             m_fadeInFlag = false;
             gameObject.SetActive(true);
 
             // 画像設定 
-            SetPromoCardSprites(promoCardSprites);
+            SetPromoCardSprites(promoCardSprites, teamColors);
 
             // 入場スタート 
             StartCoroutine(CoEnter1(ranking));

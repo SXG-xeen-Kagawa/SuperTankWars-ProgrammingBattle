@@ -326,6 +326,30 @@ namespace SXG2025
                 var charaCamera = Instantiate(PrefabHolder.Instance.CharaRenderCameraPrefab, this.transform);
                 m_charaRenderCameraList.Add(charaCamera);
             }
+            yield return null;
+
+            // プロモカード用RenderTexture作成 
+            if (PromoCardRenderCamera.Instance == null)
+            {
+                Instantiate(PrefabHolder.Instance.PromoCardRenderCameraPrefab);
+            }
+            for (int i=0; i < GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE; ++i)
+            {
+                var charaCamera = PromoCardRenderCamera.Instance;
+                var entrySheet = m_playerEntrySheetList[i];
+                charaCamera.SetRendering(entrySheet.m_baseTank.transform, entrySheet.m_comPlayer, entrySheet.m_tankBaseSpec, i, m_gameTeamColors[i]);
+
+                // test
+                //GameObject obj = new GameObject("Test");
+                //var rawImage = obj.AddComponent<UnityEngine.UI.RawImage>();
+                //obj.transform.SetParent(m_resultScreen2UI.transform.parent);
+                //rawImage.texture = charaCamera.GetTexture(i);
+                //RectTransform rt = obj.GetComponent<RectTransform>();
+                //rt.sizeDelta = new Vector2(1920 / 4, 1080 / 4);
+                //rt.anchoredPosition = new Vector2(1920 / 8 * (i * 2 - 3), 1080 / 3);
+
+                yield return null;
+            }
 
 
             yield return new WaitForSeconds(DELAY_TIME);
@@ -406,7 +430,7 @@ namespace SXG2025
             {
                 promoCards[i] = m_playerEntrySheetList[i].m_comPlayer.PromoCardImage;
             }
-            PromoCardsInsert.Instance.EnterEqualityMode(promoCards);
+            PromoCardsInsert.Instance.EnterEqualityMode(promoCards, m_gameTeamColors);
             while (!PromoCardsInsert.Instance.IsScreenCovered)
             {
                 yield return null;
@@ -712,7 +736,6 @@ namespace SXG2025
         {
             const float FADEOUT_TIME = 0.5f;
             const float TANK_HUMAN_CENTER_OFFSET_Y = 0.8f;
-            const float LOSER_HUMAN_CENTER_OFFSET_Y = 0.3f;
 
 #if RESULT_TEST
             // リザルト検証用ダミーデータ 
@@ -921,7 +944,7 @@ namespace SXG2025
             {
                 promoCards[i] = m_playerEntrySheetList[i].m_comPlayer.PromoCardImage;
             }
-            PromoCardsInsert.Instance.EnterChampionMode(promoCards, GameConfigSetting.Instance.Ranking);
+            PromoCardsInsert.Instance.EnterChampionMode(promoCards, m_gameTeamColors, GameConfigSetting.Instance.Ranking);
             while (!PromoCardsInsert.Instance.IsScreenCovered)
             {
                 yield return null;

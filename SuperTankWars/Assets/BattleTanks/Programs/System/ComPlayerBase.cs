@@ -47,11 +47,12 @@ namespace SXG2025
             {
                 if (m_promoCardImage != null) return m_promoCardImage;
 
-                if (s_defaultPromoCardImage == null)
-                {
-                    s_defaultPromoCardImage = Resources.Load<Sprite>("Textures/default_promo_card");
-                }
-                return s_defaultPromoCardImage;
+                //if (s_defaultPromoCardImage == null)
+                //{
+                //    s_defaultPromoCardImage = Resources.Load<Sprite>("Textures/default_promo_card");
+                //}
+                //return s_defaultPromoCardImage;
+                return null;
             }
         }
         private static Sprite s_defaultPromoCardImage = null;
@@ -278,19 +279,16 @@ namespace SXG2025
         /// ローカル角度(ヨー、ピッチ)を指定して砲塔を旋回させる 
         /// </summary>
         /// <param name="turretId">砲塔番号</param>
-        /// <param name="yawPower">左右の旋回：戦車の正面が0度：右方向がプラス、左方向がマイナス</param>
-        /// <param name="pitchPower">上下の旋回：戦車の正面が0度：下方向がプラス、上方向がマイナス</param>
-        [System.Obsolete("この関数は使用しても何も起こりません。")]
+        /// <param name="yawAngle">左右の旋回角度（度）。正面が0度、右がプラス、左がマイナス。推奨範囲は -180～+180。</param>
+        /// <param name="pitchAngle">上下の旋回角度（度）。正面が0度、上がマイナス、下がプラス。上限は -45度、下限は +10度。</param>
         protected void SXG_RotateTurretToAngle(int turretId, float yawAngle, float pitchAngle)
         {
-            Debug.LogError("SXG_RotateTurretToAngle関数は使用しないでください。");
+            Assert.IsNotNull(m_comBehaviorData.m_turretData);
+            Assert.IsTrue(0 <= turretId && turretId < m_comBehaviorData.m_turretData.Length);
 
-            //Assert.IsNotNull(m_comBehaviorData.m_turretData);
-            //Assert.IsTrue(0 <= turretId && turretId < m_comBehaviorData.m_turretData.Length);
-
-            //m_comBehaviorData.m_turretData[turretId].m_controlMode = TurretControlMode.TargetAngle;
-            //m_comBehaviorData.m_turretData[turretId].m_targetYawAngle = yawAngle;
-            //m_comBehaviorData.m_turretData[turretId].m_targetPitchAngle = pitchAngle;
+            m_comBehaviorData.m_turretData[turretId].m_controlMode = TurretControlMode.TargetAngle;
+            m_comBehaviorData.m_turretData[turretId].m_targetYawAngle = yawAngle;
+            m_comBehaviorData.m_turretData[turretId].m_targetPitchAngle = pitchAngle;
         }
 
         /// <summary>
