@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditor.Experimental.SceneManagement;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,16 +13,16 @@ namespace SXG2025
     [InitializeOnLoad]
     public static class EditComPlayerSceneGui
     {
-        // 砲塔プレハブのパス 
+        // 砲塔プレハブのパス
         const string TurretPrefabPath = "Assets/BattleTanks/Prefabs/TurretPart.prefab";
 
-        // 回転パーツプレハブのパス 
+        // 回転パーツプレハブのパス
         const string RotatorPrefabPath = "Assets/BattleTanks/Prefabs/RotJointPart.prefab";
 
         // ComPlayerBase 側の配列フィールド名
         const string TurretArrayFieldName = "m_turrets";
 
-        // ComPlayerBase 側の配列フィールド名 
+        // ComPlayerBase 側の配列フィールド名
         const string RotatorArrayFieldName = "m_rotJoints";
 
 
@@ -67,6 +68,14 @@ namespace SXG2025
         // ----------------------------
         static bool m_panelMinimized = false;
 
+        // ----------------------------
+        // 追加：装甲デフォルトマテリアル
+        // ----------------------------
+        const string ArmorMaterialsFolderName = "Materials";
+        const string ArmorDefaultMaterialFileName = "Armor_Default.mat";
+        const string ShaderName_URP_Lit = "Universal Render Pipeline/Lit";
+        const string ShaderName_Standard = "Standard";
+
 
 
         static EditComPlayerSceneGui()
@@ -99,7 +108,7 @@ namespace SXG2025
 
         static void RemakeStyles()
         {
-            // スタイル 
+            // スタイル
             m_valueStyle = new GUIStyle(EditorStyles.label);
 
             m_warningValueStyle = new GUIStyle(EditorStyles.label);
@@ -137,7 +146,7 @@ namespace SXG2025
                 m_costValueWarningStyle.normal.textColor = new Color(1f, 0.35f, 0.35f);
             }
 
-            // アイコン付きラベル 
+            // アイコン付きラベル
             if (m_easyEditButtonContent == null)
             {
                 var icon = EditorGUIUtility.IconContent("d_ToolHandleCenter");
@@ -153,21 +162,20 @@ namespace SXG2025
 
         static void OnSceneGUI(SceneView sv)
         {
-            // Prefab編集画面でなければ何もしない 
+            // Prefab編集画面でなければ何もしない
             PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
             if (stage == null) return;
 
-            // 選択オブジェクトが ComPlayerBase を持っているか確認 
+            // 選択オブジェクトが ComPlayerBase を持っているか確認
             GameObject obj = stage.prefabContentsRoot;
-            //GameObject obj = Selection.activeGameObject;
             if (obj == null) return;
             var comPlayer = obj.GetComponent<ComPlayerBase>();
             if (comPlayer == null) return;
 
-            // スタイル生成 
+            // スタイル生成
             RemakeStyles();
 
-            // 定期的に必要があればコスト計算 
+            // 定期的に必要があればコスト計算
             if (0.2f < EditorApplication.timeSinceStartup - m_lastRecalcTime)
             {
                 RecalculateCostIfNeeded(obj);
@@ -217,7 +225,6 @@ namespace SXG2025
                 }
 
                 // ヘッダー行でドラッグ移動できるようにする
-                // ※BeginArea内なので、最後にrectを更新する方式が安定します
                 Rect headerRect = GUILayoutUtility.GetLastRect();
                 headerRect.x = 0;
                 headerRect.width = m_panelRect.width;
@@ -488,10 +495,9 @@ namespace SXG2025
             }
 
 
-            // エラーオブジェクト 
+            // エラーオブジェクト
             if (0 < m_errorObjectList.Count)
             {
-                // ※OnSceneGUI内GUILayoutはBeginGUI/EndGUIで囲うほうが安全です
                 Handles.BeginGUI();
                 GUILayout.BeginArea(new Rect(50, 150, 400, 64), GUI.skin.box);
                 GUILayout.Label("規定違反パーツ (" + m_errorObjectList.Count + "個)", m_warningValueStyle);
@@ -508,7 +514,7 @@ namespace SXG2025
 
 
 
-            // 砲塔、回転部位にテキスト表示 
+            // 砲塔、回転部位にテキスト表示
             Handles.BeginGUI();
             try
             {
@@ -519,10 +525,10 @@ namespace SXG2025
                 Handles.EndGUI();
             }
 
-            // 地面を表示 
+            // 地面を表示
             DrawGround();
 
-            // レギュレーションサイズを表示 
+            // レギュレーションサイズを表示
             {
                 var dataTank = LoadEditorDataTankCache();
                 var bounds = dataTank.m_regulationBounds;
@@ -532,11 +538,10 @@ namespace SXG2025
                 Handles.zTest = UnityEngine.Rendering.CompareFunction.LessEqual;
                 if (0 < m_errorObjectList.Count)
                 {
-                    Handles.color = Color.red;  // 規定違反がある場合は枠線を赤にする 
+                    Handles.color = Color.red;  // 規定違反がある場合は枠線を赤にする
                 }
                 else
                 {
-                    //Handles.color = Color.white;
                     Handles.color = new Color(0.5f, 1.0f, 0.7f);
                 }
                 Handles.DrawWireCube(bounds.center, bounds.size);
@@ -546,14 +551,14 @@ namespace SXG2025
         }
 
         /// <summary>
-        /// 地面を表示 
+        /// 地面を表示
         /// </summary>
         static void DrawGround()
         {
-            const float GROUND_Y = -0.57f;                // 地面の高さ 
+            const float GROUND_Y = -0.57f;                // 地面の高さ
             const float RADIUS = 5.0f;
 
-            // 円の中心 
+            // 円の中心
             Vector3 center = Vector3.zero;
             center.y = GROUND_Y;
 
@@ -561,7 +566,7 @@ namespace SXG2025
             var fillColor = new Color(0.55f, 0.30f, 0.12f, 0.20f);
             var edgeColor = new Color(0.55f, 0.30f, 0.12f, 0.90f);
 
-            // デプス 
+            // デプス
             var oldZTest = Handles.zTest;
             Handles.zTest = UnityEngine.Rendering.CompareFunction.LessEqual;
 
@@ -569,11 +574,11 @@ namespace SXG2025
             Handles.color = fillColor;
             Handles.DrawSolidDisc(center, Vector3.up, RADIUS);
 
-            // 外円 
+            // 外円
             Handles.color = edgeColor;
             Handles.DrawWireDisc(center, Vector3.up, RADIUS);
 
-            // 戻す 
+            // 戻す
             Handles.zTest = oldZTest;
             Handles.color = Color.white;
         }
@@ -583,7 +588,7 @@ namespace SXG2025
         {
             Vector3 DefTurretLocalPosition = new Vector3(0, 1.42f, 0);
 
-            // 砲塔プレハブロード 
+            // 砲塔プレハブロード
             GameObject turretPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(TurretPrefabPath);
             if (turretPrefab == null)
             {
@@ -591,7 +596,7 @@ namespace SXG2025
                 return;
             }
 
-            // Prefab Stage が有効か再確認 
+            // Prefab Stage が有効か再確認
             if (stage == null)
             {
                 EditorUtility.DisplayDialog("Error", "Prefab 編集画面が開かれていません。", "OK");
@@ -622,7 +627,7 @@ namespace SXG2025
             newTurret.transform.SetParent(comPlayer.transform, false);
             newTurret.transform.SetLocalPositionAndRotation(DefTurretLocalPosition, Quaternion.identity);
 
-            // 命名 
+            // 命名
             {
                 var prefix = turretPrefab.name + "_";
                 int serial = GetNextTwoDigitSerialUnder(comPlayer.transform, prefix);
@@ -638,7 +643,7 @@ namespace SXG2025
                 return;
             }
 
-            // 配列への追加前に Undo登録 
+            // 配列への追加前に Undo登録
             Undo.RecordObject(comPlayer, "Add Turret Reference");
 
             int newIndex = arrayProperty.arraySize;
@@ -647,27 +652,24 @@ namespace SXG2025
             element.objectReferenceValue = newTurret;
             so.ApplyModifiedProperties();
 
-            // Prefab Stage のシーンをDirtyにする 
+            // Prefab Stage のシーンをDirtyにする
             EditorSceneManager.MarkSceneDirty(stage.scene);
 
-            // Inspector更新とログ 
+            // Inspector更新とログ
             EditorUtility.SetDirty(comPlayer);
             Debug.Log("砲塔を追加しました。Prefab編集画面のSaveを押して保存してください。");
 
-            // 生成したオブジェクトを選択状態にする 
+            // 生成したオブジェクトを選択状態にする
             Selection.activeGameObject = newTurret;
             EditorGUIUtility.PingObject(newTurret);
-            //SceneView.FrameLastActiveSceneView();     // このオブジェクトにカメラをフォーカスしたい場合に使う 
         }
 
         /// <summary>
-        /// 回転パーツを追加する 
+        /// 回転パーツを追加する
         /// </summary>
-        /// <param name="comPlayer"></param>
-        /// <param name="stage"></param>
         static void TryAddRotatorToTankInPrefabStage(ComPlayerBase comPlayer, PrefabStage stage)
         {
-            // 回転部プレハブロード 
+            // 回転部プレハブロード
             GameObject rotatorPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RotatorPrefabPath);
             if (rotatorPrefab == null)
             {
@@ -675,7 +677,7 @@ namespace SXG2025
                 return;
             }
 
-            // Prefab Stage が有効か再確認 
+            // Prefab Stage が有効か再確認
             if (stage == null)
             {
                 EditorUtility.DisplayDialog("Error", "Prefab 編集画面が開かれていません。", "OK");
@@ -706,7 +708,7 @@ namespace SXG2025
             newRotator.transform.SetParent(comPlayer.transform, false);
             newRotator.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
 
-            // 命名 
+            // 命名
             {
                 var prefix = rotatorPrefab.name + "_";
                 int serial = GetNextTwoDigitSerialUnder(comPlayer.transform, prefix);
@@ -722,7 +724,7 @@ namespace SXG2025
                 return;
             }
 
-            // 配列への追加前に Undo登録 
+            // 配列への追加前に Undo登録
             Undo.RecordObject(comPlayer, "Add Rotator Reference");
 
             int newIndex = arrayProperty.arraySize;
@@ -731,17 +733,16 @@ namespace SXG2025
             element.objectReferenceValue = newRotator;
             so.ApplyModifiedProperties();
 
-            // Prefab Stage のシーンをDirtyにする 
+            // Prefab Stage のシーンをDirtyにする
             EditorSceneManager.MarkSceneDirty(stage.scene);
 
-            // Inspector更新とログ 
+            // Inspector更新とログ
             EditorUtility.SetDirty(comPlayer);
             Debug.Log("回転部位を追加しました。Prefab編集画面のSaveを押して保存してください。");
 
-            // 生成したオブジェクトを選択状態にする 
+            // 生成したオブジェクトを選択状態にする
             Selection.activeGameObject = newRotator;
             EditorGUIUtility.PingObject(newRotator);
-            //SceneView.FrameLastActiveSceneView();     // このオブジェクトにカメラをフォーカスしたい場合に使う 
         }
 
 
@@ -757,7 +758,7 @@ namespace SXG2025
                 var n = tr.gameObject.name;
                 if (!n.StartsWith(namePrefix, StringComparison.Ordinal)) continue;
 
-                // 末尾２桁を読む 
+                // 末尾２桁を読む
                 if (n.Length < namePrefix.Length + 2) continue;
 
                 var tail = n.Substring(n.Length - 2, 2);
@@ -767,13 +768,13 @@ namespace SXG2025
                 }
             }
 
-            // 次の番号を返す 
+            // 次の番号を返す
             return max + 1;
         }
 
 
         /// <summary>
-        /// 必要なら配列を作り直す 
+        /// 必要なら配列を作り直す
         /// </summary>
         static bool CompactArray(ComPlayerBase comPlayer)
         {
@@ -810,7 +811,7 @@ namespace SXG2025
                 }
             }
 
-            // 数を比較 
+            // 数を比較
             if (originalSize == keep.Count)
             {
                 return false;
@@ -853,53 +854,45 @@ namespace SXG2025
         }
 
         /// <summary>
-        /// 必要ならコストを再計算 
+        /// 必要ならコストを再計算
         /// </summary>
-        /// <param name="root"></param>
-        /// <param name="tankWrapper"></param>
-        /// <param name="force"></param>
         static void RecalculateCostIfNeeded(GameObject root, bool force = false)
         {
             if (root == null) return;
             ComPlayerBase comPlayer = root.GetComponent<ComPlayerBase>();
             if (comPlayer == null) return;
 
-            // 簡易ハッシュを比較して更新があった時だけ再計算する 
+            // 簡易ハッシュを比較して更新があった時だけ再計算する
             int h = ComputeSimpleHash(root);
             if (force || h != m_lastHash)
             {
                 // コストデータをロード
                 var dataTank = LoadEditorDataTankCache();
 
-
-                // コスト再計算 
+                // コスト再計算
                 m_lastHash = h;
                 m_lastCost = BaseTank.SystemCalculateTankCost(comPlayer,
                     out m_countOfTurrets, out m_countOfRotators, out m_countOfArmors, out m_tankMass,
                     dataTank, m_errorObjectList);
-                //m_lastCost = ComputeCost(root);
+
                 m_lastRecalcTime = EditorApplication.timeSinceStartup;
-                // SceneViewの再描画
                 SceneView.RepaintAll();
             }
 
         }
 
         /// <summary>
-        /// プレハブの簡易ハッシュ 
+        /// プレハブの簡易ハッシュ
         /// </summary>
-        /// <param name="root"></param>
-        /// <param name="tank"></param>
-        /// <returns></returns>
         static int ComputeSimpleHash(GameObject root)
         {
             int hash = 17;
 
             unchecked
             {
-                // 子の数 
+                // 子の数
                 hash = hash * 31 + root.GetComponentsInChildren<Transform>(true).Length;
-                // MeshFilter / MeshRenderer の参照IDと頂点数 
+                // MeshFilter / MeshRenderer の参照IDと頂点数
                 foreach (var mf in root.GetComponentsInChildren<MeshFilter>(true))
                 {
                     var m = mf.sharedMesh;
@@ -917,10 +910,10 @@ namespace SXG2025
                         hash = hash * 31 + ((mat != null) ? mat.GetInstanceID() : 0);
                     }
                 }
-                // 子のスケール変更 
+                // 子のスケール変更
                 foreach (var t in root.GetComponentsInChildren<Transform>(true))
                 {
-                    // スケール 
+                    // スケール
                     int sx = Mathf.RoundToInt(t.localScale.x * 1000.0f);
                     int sy = Mathf.RoundToInt(t.localScale.y * 1000.0f);
                     int sz = Mathf.RoundToInt(t.localScale.z * 1000.0f);
@@ -928,7 +921,7 @@ namespace SXG2025
                     hash = hash * 397 ^ sy;
                     hash = hash * 397 ^ sz;
 
-                    // 座標 
+                    // 座標
                     int px = Mathf.RoundToInt(t.localPosition.x * 1000.0f);
                     int py = Mathf.RoundToInt(t.localPosition.y * 1000.0f);
                     int pz = Mathf.RoundToInt(t.localPosition.z * 1000.0f);
@@ -936,7 +929,7 @@ namespace SXG2025
                     hash = hash * 397 ^ py;
                     hash = hash * 397 ^ pz;
 
-                    // 回転 
+                    // 回転
                     int rx = Mathf.RoundToInt(t.localRotation.x * 10.0f);
                     int ry = Mathf.RoundToInt(t.localRotation.y * 10.0f);
                     int rz = Mathf.RoundToInt(t.localRotation.z * 10.0f);
@@ -956,10 +949,10 @@ namespace SXG2025
         {
             var so = new SerializedObject(comPlayer);
 
-            // 砲塔 
+            // 砲塔
             TryDrawParts(so, TurretArrayFieldName, "  Turret[{0}]", sv);
 
-            // 回転部位 
+            // 回転部位
             TryDrawParts(so, RotatorArrayFieldName, "  Rotator[{0}]", sv);
         }
 
@@ -990,7 +983,7 @@ namespace SXG2025
         {
             Handles.Label(worldPos, text);
 
-            // 小さなドット 
+            // 小さなドット
             Handles.color = Color.cyan;
             Handles.DrawSolidDisc(worldPos, sv.camera.transform.forward, 0.02f);
             Handles.color = Color.white;
@@ -1084,6 +1077,28 @@ namespace SXG2025
             int serial = GetNextTwoDigitSerialUnder(comPlayer.transform, ArmorNamePrefix);
             go.name = $"{ArmorNamePrefix}{serial:00}";
 
+            // ----------------------------
+            // 追加：装甲用デフォルトマテリアルの自動生成＆割り当て
+            // ----------------------------
+            try
+            {
+                var mat = GetOrCreateArmorDefaultMaterialForCurrentPrefab(stage);
+                if (mat != null)
+                {
+                    var r = go.GetComponent<Renderer>();
+                    if (r != null)
+                    {
+                        // 参加者が学習して自力で差し替える余地を残しつつ、
+                        // 「追加した直後は灰色で味気ない」を避ける
+                        r.sharedMaterial = mat;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("装甲デフォルトマテリアルの生成/割り当てに失敗しました: " + ex.Message);
+            }
+
             // Prefab Stage のシーンをDirtyにする
             EditorSceneManager.MarkSceneDirty(stage.scene);
 
@@ -1091,7 +1106,108 @@ namespace SXG2025
             Selection.activeGameObject = go;
             EditorGUIUtility.PingObject(go);
 
-            Debug.Log("装甲（Cube）を追加しました。位置・大きさを調整し、右上のSaveで保存してください。");
+            Debug.Log("装甲（Cube）を追加しました。位置・大きさ・色を調整し、右上のSaveで保存してください。");
+        }
+
+        static Material GetOrCreateArmorDefaultMaterialForCurrentPrefab(PrefabStage stage)
+        {
+            if (stage == null) return null;
+
+            // 参加者フォルダが取れれば最優先。取れない場合はPrefabのあるフォルダを使う。
+            string baseFolderAssetPath = null;
+
+            if (TryGetParticipantFolderPathFromPrefabStage(stage, out var participantFolderAssetPath))
+            {
+                baseFolderAssetPath = participantFolderAssetPath;
+            }
+            else
+            {
+                var prefabAssetPath = stage.assetPath?.Replace("\\", "/");
+                if (!string.IsNullOrEmpty(prefabAssetPath))
+                {
+                    baseFolderAssetPath = Path.GetDirectoryName(prefabAssetPath)?.Replace("\\", "/");
+                }
+            }
+
+            if (string.IsNullOrEmpty(baseFolderAssetPath))
+            {
+                return null;
+            }
+
+            // Materialsフォルダ
+            var materialsFolderAssetPath = CombineAssetPath(baseFolderAssetPath, ArmorMaterialsFolderName);
+            EnsureFolderExists(materialsFolderAssetPath);
+
+            // Armor_Default.mat
+            var matAssetPath = CombineAssetPath(materialsFolderAssetPath, ArmorDefaultMaterialFileName);
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(matAssetPath);
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            // シェーダ選択（URP優先、無ければStandard）
+            Shader shader = Shader.Find(ShaderName_URP_Lit);
+            if (shader == null)
+            {
+                shader = Shader.Find(ShaderName_Standard);
+            }
+            if (shader == null)
+            {
+                Debug.LogWarning("Shaderが見つからないため、装甲デフォルトマテリアルを作成できません。");
+                return null;
+            }
+
+            var mat = new Material(shader);
+
+            // 初期色：少しだけ“戦車っぽい”色に（好みで調整OK）
+            // URP/Lit: _BaseColor, Standard: _Color
+            var defaultColor = new Color(0.35f, 0.45f, 0.30f, 1.0f); // 渋めグリーン
+            if (mat.HasProperty("_BaseColor"))
+            {
+                mat.SetColor("_BaseColor", defaultColor);
+            }
+            else if (mat.HasProperty("_Color"))
+            {
+                mat.SetColor("_Color", defaultColor);
+            }
+
+            AssetDatabase.CreateAsset(mat, matAssetPath);
+            AssetDatabase.SaveAssets();
+
+            return mat;
+        }
+
+        static string CombineAssetPath(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a)) return b;
+            if (string.IsNullOrEmpty(b)) return a;
+            a = a.Replace("\\", "/").TrimEnd('/');
+            b = b.Replace("\\", "/").TrimStart('/');
+            return $"{a}/{b}";
+        }
+
+        static void EnsureFolderExists(string folderAssetPath)
+        {
+            if (string.IsNullOrEmpty(folderAssetPath)) return;
+            folderAssetPath = folderAssetPath.Replace("\\", "/").TrimEnd('/');
+
+            if (AssetDatabase.IsValidFolder(folderAssetPath)) return;
+
+            // 親から順に作る
+            var parts = folderAssetPath.Split('/');
+            if (parts.Length <= 1) return;
+
+            string cur = parts[0]; // "Assets" の想定
+            for (int i = 1; i < parts.Length; i++)
+            {
+                string next = cur + "/" + parts[i];
+                if (!AssetDatabase.IsValidFolder(next))
+                {
+                    AssetDatabase.CreateFolder(cur, parts[i]);
+                }
+                cur = next;
+            }
         }
 
 

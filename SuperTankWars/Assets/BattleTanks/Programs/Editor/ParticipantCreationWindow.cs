@@ -582,11 +582,11 @@ namespace SXG2025
                     if (Data.instance.entryMethod == EntryMethod.Connpass)
                     {
                         EditorUtility.DisplayDialog("挑戦者登録",
-                            $"参加番号:{Data.instance.participantID} のAIを登録しました。\n{folderPath}", "OK");
+                            $"参加番号:{Data.instance.participantID} のAIを準備しました。\n{folderPath}", "OK");
                     } else
                     {
                         EditorUtility.DisplayDialog("挑戦者登録",
-                            $"参加ID:{Data.instance.randomID} のAIを登録しました。\n{folderPath}", "OK");
+                            $"参加ID:{Data.instance.randomID} のAIを準備しました。\n{folderPath}", "OK");
                     }
 
                     // ダイアログ閉じたらウインドウも閉じる(1フレーム後)
