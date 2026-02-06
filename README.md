@@ -75,4 +75,4 @@ Unity初心者の方でも、サンプルコードや「かんたんAI作成機�
 イベントやAI作成に関するお問い合わせは、イベントページからお願いします。
 
 - connpassページ：**https://connpass.com/event/382844/**
-- 提出フォーム（Google Form）：**https://peatix.com/event/4828652/**
+- 提出フォーム（Google Form）：**https://**

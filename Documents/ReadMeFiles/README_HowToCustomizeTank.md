@@ -50,8 +50,12 @@ Prefab編集モードパネルの「作る」セクションで「砲塔追加�
 Prefab編集モードパネルの「作る」セクションで「装甲追加」ボタンを押すと、装甲用のCubeが追加されます。  
 追加されたCubeは、Prefab内で位置・回転・スケールを調整するだけで装甲として使えます。  
 追加された装甲（Cube）は `Armor_01` のような名前でPrefab内に作成されます。
-
 ![image](../ReadMeImages/HowToCustomizeTank/002.png)
+
+  - 装甲の色を変えたい場合は、そのパーツを選んでInspectorの下の方に色を変更する項目があります。お試しください。
+![image](../ReadMeImages/HowToCustomizeTank/015.png)
+
+
 
 ### 発展：テクスチャで見た目を整える（任意）
 
@@ -123,6 +127,16 @@ Prefab編集モードパネルの「コリジョン表示」で、攻撃が当�
 ボタンを押してもコリジョンが表示されない場合は、エディタ上の表示ボタンが有効になっているか確認してください。
 
 ![image](../ReadMeImages/HowToCustomizeTank/009.png)
+
+---
+
+## 情報ウインドウの最小化
+
+左上に表示される情報ウインドウが邪魔な場合は、このウインドウ右上のボタンを押していただくと最小化できます。
+戻すときはもう一度押してください。
+![image](../ReadMeImages/HowToCustomizeTank/016.png)
+
+
 
 ---
 
