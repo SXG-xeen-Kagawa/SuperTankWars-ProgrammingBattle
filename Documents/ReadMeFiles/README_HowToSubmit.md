@@ -47,7 +47,7 @@ Projectウィンドウで `Assets/Participant/` を開きます。
 
 提出用Googleフォームへ、作成したZIPファイルを添付して送信してください。
 
-- 提出フォーム：**https://docs.google.com/forms/d/1aQEw6JigistTzGaLfjEhfi6aG5wmq2Lgic10hSh9f-g/**
+- 提出フォーム：**https://forms.gle/g9fwR5QPTnpYDdPu8**
 
 提出は締め切りまで何度でも可能です。  
 本番では、最後に提出されたZIPが採用されます。
