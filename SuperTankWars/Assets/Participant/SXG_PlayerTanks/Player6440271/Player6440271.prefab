@@ -51,7 +51,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_yourOrganization: "\u6311\u6226\u3057\u3066\u306D"
-  m_yourName: "SXG\u51FA\u5834\u30BF\u30F3\u30AF"
+  m_yourName: "SXG\u51FA\u5834\u30BF\u30F3\u30AF\uFF12"
   m_tankName: "\u30BF\u30F3\u30AF\uFF12"
   m_faceImage: {fileID: 0}
   m_promoCardImage: {fileID: 0}
