@@ -8,7 +8,7 @@
 - connpassページ：**https://connpass.com/event/382844/**
 
 ※Peatixからエントリーする場合は、受付番号は自動生成されます。
-- peatixページ：**https://peatix.com/event/4828652/**
+- peatixページ：**https://tigstankwars.peatix.com/**
 
 
 
