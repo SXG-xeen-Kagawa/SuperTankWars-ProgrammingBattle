@@ -258,18 +258,19 @@ Prefabの編集モードで、自身の戦車に砲塔や装甲を着けてカ�
 
 <h3 id="sample08">たこねこ（Assets/Participant/Sample08）</h3>
 
-<img width="200" alt="Sample01" src="../ReadMeImages/Reference/Sample08.png" />
+<img width="280" alt="Sample01" src="../ReadMeImages/Reference/Sample08.png" />
 
-- 出撃コスト　：166 pts
+- 出撃コスト　：168 pts
 - 出撃可能回数：６回
 - 砲塔数　　　：１基
 - 回転部位　　：０基
 - 装甲数　　　：16基
-- 戦車質量　　：1080 kg
+- 戦車質量　　：1090 kg
 
 コストを最小限に抑え、装甲パーツはコリジョンを囲うように配置して即死を免れる。  
-特に目的地はなく、左右にくねくねと移動。  
-砲塔は常に一番近くにいるプレイヤーを狙い、撃てるタイミングで撃つ。  
+かんたんAI作成機能を使って、移動プリセット＝Orbiting Arena、狙う相手は Min Distance にしました。  
+自作3Dモデルをアタッチしており、SkinnedMeshならコスト０で、防御効果もありません。  
+fbxやテクスチャ、マテリアル、シェーダーが全て成果物のフォルダ内に収まっていることの参考にしてください。  
 
 ---
 
