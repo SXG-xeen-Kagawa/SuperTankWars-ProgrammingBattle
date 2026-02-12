@@ -444,8 +444,8 @@ namespace SXG2025
                         GUILayout.FlexibleSpace();
                     }
 
-                    // Save案内は “常時HelpBox” だと面積を食うので、短いLabelに
-                    GUILayout.Label("※変更後は右上の「Save」で保存します。", EditorStyles.miniLabel);
+                    //// Save案内は “常時HelpBox” だと面積を食うので、短いLabelに
+                    //GUILayout.Label("※変更後は右上の「Save」で保存します。", EditorStyles.miniLabel);
 
                     GUILayout.Space(6);
 
