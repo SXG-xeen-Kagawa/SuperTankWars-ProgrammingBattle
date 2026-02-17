@@ -413,15 +413,33 @@ namespace SXG2025
             // フェードイン２
             if (PromoCardsInsert.Check)
             {
-                PromoCardsInsert.Instance.FadeIn();
+                PromoCardsInsert.Instance.FadeIn();     // プロモカード画面自体の退場 
             }
 
             // キー入力待ち 
-            while (!WasPressedKey())
+            while (true)
             {
-                // デモ 
+                // 入力待ち 
+                if (WasPressedKey())
+                {
+                    if (PromoCardsInsert.Check)
+                    {
+                        // プロモカードありの場合は退場を確認してから進行 
+                        if (PromoCardsInsert.Instance.gameObject.activeSelf == false)
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        // プロモカードが無い場合は押したらすぐ進行
+                        break;
+                    }
+                }
+
+                // デモ更新 
                 UpdateDemoTanksChallengersIntro();
-                yield return null;
+                yield return true;
             }
 
             // プロモカード：均等入場 
@@ -435,8 +453,6 @@ namespace SXG2025
             {
                 yield return null;
             }
-            // プロモカード：退場 
-            PromoCardsInsert.Instance.FadeIn();
 
             // キャラカメラを止める
             foreach (var charaCamera in m_charaRenderCameraList)
@@ -448,6 +464,9 @@ namespace SXG2025
             m_challengersIntroScreenUI.CloseScreen();
             SoundController.PlaySE(SoundController.SEType.GameStart);
             yield return new WaitForSeconds(0.1f);
+
+            // プロモカード：退場 
+            PromoCardsInsert.Instance.FadeIn();
 
             // カウントダウンへ 
             ChangeSceneFlow(SceneFlow.CountDown);
