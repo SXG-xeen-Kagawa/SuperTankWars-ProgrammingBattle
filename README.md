@@ -27,6 +27,10 @@
   <img width="880" alt="ReleasesのAssetsからZIPをダウンロード" src="Documents/ReadMeImages/Top/002.png" />
 </div>
 
+> 補足：Unityに不慣れな方は、プロジェクトを開いて動作確認するまでの手順を先に読むと迷いにくいです。  
+> - [『Unity初心者向け：起動・動作確認ガイド』](Documents/ReadMeFiles/README_UnityBeginnerSetup.md)
+
+
 > 補足：すぐに作業を始めたい方は、次の2つを見ると迷いにくいです。  
 > - [『AI作成手順』](Documents/ReadMeFiles/README_HowToCreate.md)  
 > - [『AI提出手順』](Documents/ReadMeFiles/README_HowToSubmit.md)
