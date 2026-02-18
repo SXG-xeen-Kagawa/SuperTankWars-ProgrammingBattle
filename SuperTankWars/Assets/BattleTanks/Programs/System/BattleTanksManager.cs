@@ -293,7 +293,9 @@ namespace SXG2025
                 // AI選択
                 int entryId = GameDataHolder.Instance.ParticipantIndexes[i];
                 if (entryId== -1)
+                {
                     entryId = i % m_participantList.m_comPlayers.Count;
+                }
                 entrySheet.m_comPlayerPrefab = m_participantList.m_comPlayers[entryId];
 
                 // 戦車生成 (コスト計算含む)
@@ -333,24 +335,6 @@ namespace SXG2025
             {
                 Instantiate(PrefabHolder.Instance.PromoCardRenderCameraPrefab);
             }
-            for (int i=0; i < GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE; ++i)
-            {
-                var charaCamera = PromoCardRenderCamera.Instance;
-                var entrySheet = m_playerEntrySheetList[i];
-                charaCamera.SetRendering(entrySheet.m_baseTank.transform, entrySheet.m_comPlayer, entrySheet.m_tankBaseSpec, i, m_gameTeamColors[i]);
-
-                // test
-                //GameObject obj = new GameObject("Test");
-                //var rawImage = obj.AddComponent<UnityEngine.UI.RawImage>();
-                //obj.transform.SetParent(m_resultScreen2UI.transform.parent);
-                //rawImage.texture = charaCamera.GetTexture(i);
-                //RectTransform rt = obj.GetComponent<RectTransform>();
-                //rt.sizeDelta = new Vector2(1920 / 4, 1080 / 4);
-                //rt.anchoredPosition = new Vector2(1920 / 8 * (i * 2 - 3), 1080 / 3);
-
-                yield return null;
-            }
-
 
             yield return new WaitForSeconds(DELAY_TIME);
 
@@ -440,6 +424,16 @@ namespace SXG2025
                 // デモ更新 
                 UpdateDemoTanksChallengersIntro();
                 yield return true;
+            }
+
+            // プロモカード入場前に戦車をレンダリング
+            for (int i = 0; i < GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE; ++i)
+            {
+                var charaCamera = PromoCardRenderCamera.Instance;
+                var entrySheet = m_playerEntrySheetList[i];
+                entrySheet.m_baseTank.transform.SetPositionAndRotation(entrySheet.m_initialPosition, entrySheet.m_initialRotation);
+                charaCamera.SetRendering(entrySheet.m_baseTank.transform, entrySheet.m_comPlayer, entrySheet.m_tankBaseSpec, i, m_gameTeamColors[i]);
+                yield return null;
             }
 
             // プロモカード：均等入場 
@@ -617,135 +611,6 @@ namespace SXG2025
             ChangeSceneFlow(SceneFlow.Result2);
         }
 
-        /*
-        /// <summary>
-        /// リザルト画面 
-        /// </summary>
-        /// <returns></returns>
-        private IEnumerator CoSceneResult()
-        {
-            const float FADEOUT_TIME = 0.5f;
-            const float TANK_HUMAN_CENTER_OFFSET_Y = 0.8f;
-            const float LOSER_HUMAN_CENTER_OFFSET_Y = 0.3f;
-
-            // 生き残り
-            {
-                List<int> survivedList = new();
-                foreach (var entrySheet in m_playerEntrySheetList)
-                {
-                    if (entrySheet.m_baseTank != null)
-                    {
-                        survivedList.Add(entrySheet.m_id);
-                    }
-                }
-                if (0 < survivedList.Count)
-                {
-                    int bonus = GameDataHolder.Instance.DataGame.m_survivedBonusScore / survivedList.Count;
-                    foreach (var id in survivedList)
-                    {
-                        m_battleRecordList.Add(new BattleRecord
-                        {
-                            m_attackTeamNo = id,
-                            m_losedTeamNo = id,
-                            m_reason = ScoreReason.Survived,
-                            m_score = bonus,
-                        });
-                    }
-                }
-            }
-
-            // フェードアウト 
-            FadeCanvas.Instance.FadeOut(FADEOUT_TIME);
-            yield return new WaitForSeconds(FADEOUT_TIME);
-
-            // キャラテクスチャを描画開始 
-            for (int i = 0; i < GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE; ++i)
-            {
-                var charaTexture = m_charaRenderCameraList[i];
-                var playerSheet = m_playerEntrySheetList[i];
-                if (playerSheet.m_baseTank != null)
-                {
-                    charaTexture.StartRendering(playerSheet.m_baseTank.transform,
-                        Vector3.up * TANK_HUMAN_CENTER_OFFSET_Y, CharaRenderCamera.CameraMode.ChallengerIntro);
-                } else
-                {
-                    GameObject humanObj = null;
-                    foreach (var obj in playerSheet.m_loserCharaObjList)
-                    {
-                        if (obj != null)
-                        {
-                            humanObj = obj;
-                        }
-                    }
-                    if (humanObj != null)
-                    {
-                        charaTexture.StartRendering(humanObj.transform,
-                            humanObj.transform.TransformDirection(Vector3.up*LOSER_HUMAN_CENTER_OFFSET_Y), CharaRenderCamera.CameraMode.Loser);
-                    } else
-                    {
-                        charaTexture.StartRendering(m_popPoints[i],
-                            Vector3.zero, CharaRenderCamera.CameraMode.Loser);
-                    }
-                }
-            }
-            yield return null;
-
-            // mainキャンバスを非表示に 
-            m_mainCanvasController.SetAlpha(0);
-
-            // 順位を再精査 
-            List<int> rankingPlayerIdList = new();
-            for (int i = 0; i < GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE; ++i)
-            {
-                rankingPlayerIdList.Add(i);
-            }
-            rankingPlayerIdList.Sort((a, b) =>
-            {
-                var p0 = m_playerEntrySheetList[a];
-                var p1 = m_playerEntrySheetList[b];
-                if (p0.m_ranking < 0 && p1.m_ranking < 0)
-                {
-                    return p1.m_energy - p0.m_energy;
-                }
-                else
-                {
-                    return p0.m_ranking - p1.m_ranking;
-                }
-            });
-
-            // リザルト画面を開始 
-            ComPlayerBase[] comPlayers = new ComPlayerBase[m_playerEntrySheetList.Count];
-            Texture[] charaTextures = new Texture[m_charaRenderCameraList.Count];
-            for (int i=0; i < comPlayers.Length; ++i)
-            {
-                comPlayers[i] = m_playerEntrySheetList[i].m_comPlayerPrefab;
-            }
-            for (int i=0; i < m_charaRenderCameraList.Count; ++i)
-            {
-                charaTextures[i] = m_charaRenderCameraList[i].Texture;
-            }
-            m_resultScreenUI.StartScreen(
-                comPlayers, m_gameTeamColors, charaTextures, rankingPlayerIdList, GameConfigSetting.Instance.RoundCount);
-
-
-            yield return null;
-
-            // フェードイン 
-            FadeCanvas.Instance.FadeIn();
-
-            // 待ち 
-            yield return new WaitForSeconds(1.0f);
-
-            // キー入力待ち 
-            while (!WasPressedKey())
-            {
-                yield return null;
-            }
-
-            // 終了へ 
-            ChangeSceneFlow(SceneFlow.Finish);
-        }
-        */
 
         /// <summary>
         /// リザルト画面 
