@@ -1275,6 +1275,7 @@ Transform:
   - {fileID: 1860321497}
   - {fileID: 476301049}
   - {fileID: 941112381}
+  - {fileID: 1778850656}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1231818771
@@ -1890,6 +1891,133 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a1495cd940dae747b30f1f61051ce01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1778850655
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1778850656}
+  - component: {fileID: 1778850657}
+  m_Layer: 0
+  m_Name: TrackMarkManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1778850656
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1778850655}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1854012380}
+  m_Father: {fileID: 1231818770}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1778850657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1778850655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a9f45dfb53e3e1458d7ded40f8eb921, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameSystem::SXG2025.TrackMarks.TrackMarkManager
+  fieldCenter: {x: 0, y: 0, z: 0}
+  fieldRadius: 50
+  radiusTweak: 1
+  centerOffsetXZ: {x: 0, y: 0}
+  rtSize: 2048
+  rtFormat: 2
+  wrapMode: 1
+  filterMode: 1
+  fadeHalfLifeSeconds: 22
+  m_stampTexBlock: {fileID: 2800000, guid: c4a63ca0ae8d20f44a7a6704c16a7608, type: 3}
+  m_stampTexSmear: {fileID: 2800000, guid: dfbf9303e36569f46b66d4466219582d, type: 3}
+  stampWorldWidth: 1.1
+  stampWorldLength: 1.8
+  stampStrength: 1
+  minStampDistance: 1.5
+  decalMat: {fileID: 2100000, guid: a20172306e08a3f45b7404312041d361, type: 2}
+  autoApplyToDecal: 1
+  m_decalProjector: {fileID: 1854012381}
+  debugFillWhiteOnEnable: 0
+  debugStampOnceOnEnable: 0
+  m_stampStrengthBlock: 1
+  m_stampStrengthSmear: 1
+--- !u!1 &1854012379
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1854012380}
+  - component: {fileID: 1854012381}
+  m_Layer: 0
+  m_Name: Decal Projector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1854012380
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1854012379}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1778850656}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1854012381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1854012379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0777d029ed3dffa4692f417d4aba19ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.DecalProjector
+  m_Material: {fileID: 2100000, guid: a20172306e08a3f45b7404312041d361, type: 2}
+  m_DrawDistance: 1000
+  m_FadeScale: 0.9
+  m_StartAngleFade: 180
+  m_EndAngleFade: 180
+  m_UVScale: {x: 1, y: 1}
+  m_UVBias: {x: 0, y: 0}
+  m_RenderingLayerMask:
+    serializedVersion: 0
+    m_Bits: 2
+  m_ScaleMode: 0
+  m_Offset: {x: 0, y: 0, z: 1}
+  m_Size: {x: 100, y: 100, z: 2}
+  m_FadeFactor: 1
+  version: 1
+  m_DecalLayerMask: 1
 --- !u!1 &1860321496
 GameObject:
   m_ObjectHideFlags: 0

@@ -865,6 +865,221 @@ namespace SXG2025
 
         #endregion
 
+
+        private bool m_isPauseSubSystem = false;
+
+        internal void PauseSubSystem(bool isPause)
+        {
+            if (m_isPauseSubSystem != isPause)
+            {
+                m_isPauseSubSystem = isPause;
+
+                //// パーティクル停止 
+                //if (isPause)
+                //{
+                //    PauseSmokeSfx();
+                //}
+            }
+        }
+
+
+
+
+
+        #region キャタピラ痕
+
+        const float CATERPILLAR_HEIGHT_FROM_CENTER = 0.65f;
+        readonly Vector3[] m_localCaterpillarPoint = { new Vector3(0, 0, 1.5f), new Vector3(0, 0, 0), new Vector3(0, 0, -1.5f) };
+
+        [Header("Phase(Pitch)")]
+        [SerializeField] private float m_trackPitch = 1.8f; // ブロック柄の周期（stampWorldLengthと揃えると良い）
+        [SerializeField] private float m_minMoveToAccumulate = 0.01f;   // ノイズ除去 
+        [SerializeField] private int m_maxStapsPerFrame = 8;            // 保険（ワープ・急加速時）
+
+        [Header("Strength")]
+        [SerializeField] private float m_strengthMin = 0.5f;
+        [SerializeField] private float m_strengthMax = 1.0f;
+
+        [Header("Strength (Speed/Turn Boost)")]
+        [SerializeField] private float m_speedForMaxStrength = 12.0f;      // この速度で最大（m/s）
+        [SerializeField] private float m_speedStrengthMinMul = 0.6f;        // 低速時の倍率
+        [SerializeField] private float m_speedStrengthMaxMul = 1.3f;        // 高速時の倍率
+
+        [SerializeField] private float m_yawRateForMaxStrength = 3.0f;      // この角速度で最大（rad/s目安）
+        [SerializeField] private float m_turnStrengthMaxMul = 1.6f;         // 旋回でどれだけ増やすか
+
+        [SerializeField] private float m_outerTrackExtraMul = 1.15f;        // 外側履帯を少し濃く（任意）
+
+
+        struct CaterpillarAccum
+        {
+            public float m_accum;
+            public Vector3 m_prevPoint;
+            public bool m_hasPrev;
+        }
+        private CaterpillarAccum[] m_caterpillarAccums = new CaterpillarAccum[2];
+
+
+        private void LateUpdate()
+        {
+            var manager = TrackMarks.TrackMarkManager.Instance;
+            if (manager == null) return;
+            if (m_rigidbody == null) return;
+            if (m_isPauseSubSystem) return;
+
+            Vector3 velocity = m_rigidbody.linearVelocity;
+            float speed = velocity.magnitude;
+
+            // 速度補正（0..1）
+            float speed01 = Mathf.InverseLerp(0.0f, m_speedForMaxStrength, speed);
+            float speedMul = Mathf.Lerp(m_speedStrengthMinMul, m_speedStrengthMaxMul, speed01);
+
+            // 旋回補正（角速度Y成分：yaw）
+            float yawRate = m_rigidbody.angularVelocity.y;          // UnityのRigidbodyは基本これでOK
+            float turn01 = Mathf.InverseLerp(0.0f, m_yawRateForMaxStrength, Mathf.Abs(yawRate));
+            float turnMul = Mathf.Lerp(1.0f, m_turnStrengthMaxMul, turn01);
+
+            // 前進・後退判定 
+            float forwardSign = 1.0f;
+            var kind = TrackMarks.TrackMarkManager.TrackStampKind.Block;
+            float slip = 0.0f;
+            if (0.01f < velocity.sqrMagnitude)
+            {
+                // 前後判定 
+                float dot = Vector3.Dot(velocity.normalized, transform.forward);
+                forwardSign = (0 <= dot) ? 1.0f : -1.0f;
+
+                // ドリフト判定 
+                float d = Mathf.Abs(dot);
+                slip = 1.0f - d;    // 0=直進 / 1=真横 
+                if (0.35f <= slip)
+                {
+                    kind = TrackMarks.TrackMarkManager.TrackStampKind.Smear;    // 滑ってるから汚れテクスチャにする 
+                }
+            }
+
+            // 混ぜウェイト 
+            float blockW = Mathf.Lerp(1.0f, 0.2f, slip);
+            float smearW = Mathf.Lerp(0.0f, 1.0f, slip);
+
+            // キャタピラごとに処理 
+            for (int i = 0; i < m_caterpillarsList.Count; ++i)
+            {
+                var caterpillar = m_caterpillarsList[i];
+                if (caterpillar == null || caterpillar.m_partObj == null) continue;
+
+                Transform tr = caterpillar.m_partObj.transform;
+
+                // キャタピラの向きに合わせて符号反転 
+                float laneForwardSign = forwardSign;
+                if (i == 1)
+                {
+                    laneForwardSign = -1.0f * laneForwardSign;
+                }
+
+                bool isTurning = turn01 > 0.1f;
+
+                // 例：i==0を左、i==1を右と仮定
+                bool isOuter =
+                    isTurning && (
+                        (yawRate > 0.0f && i == 1) ||   // 左旋回なら右が外
+                        (yawRate < 0.0f && i == 0)      // 右旋回なら左が外
+                    );
+                float outerMul = isOuter ? m_outerTrackExtraMul : 1.0f;
+
+                // 接地点の平均をとる 
+                float hitCount = 0.0f;
+                Vector3 markPoint = Vector3.zero;
+                for (int j = 0; j < m_localCaterpillarPoint.Length; ++j)
+                {
+                    Vector3 origin = tr.TransformPoint(m_localCaterpillarPoint[j]);
+                    if (Physics.Raycast(origin, -tr.up, out RaycastHit hit,
+                        CATERPILLAR_HEIGHT_FROM_CENTER,
+                        1 << Constants.OBJ_LAYER_GROUND))
+                    {
+                        markPoint += hit.point;
+                        hitCount += 1.0f;
+                    }
+                }
+                if (hitCount <= 0.0f)
+                {
+                    m_caterpillarAccums[i].m_hasPrev = false; // 接地していない 
+                    continue;
+                }
+                markPoint /= hitCount;
+
+                // 接地が少ないほど強く
+                float t = (hitCount - 1.0f) / 2.0f;
+                float markStrength = Mathf.Lerp(m_strengthMax, m_strengthMin, t);
+                markStrength *= speedMul;
+                markStrength *= turnMul;
+                markStrength *= outerMul;
+
+                // 移動固定：prev->nowの線分上でpitchごとにスタンプする
+                if (!m_caterpillarAccums[i].m_hasPrev)
+                {
+                    m_caterpillarAccums[i].m_hasPrev = true;
+                    m_caterpillarAccums[i].m_prevPoint = markPoint;
+                    m_caterpillarAccums[i].m_accum = 0;
+
+                    // 初回スタンプ 
+                    Vector3 forward = transform.forward * laneForwardSign;
+                    manager.StampOne(markPoint, forward, markStrength, kind);
+                    continue;
+                }
+
+                Vector3 prev = m_caterpillarAccums[i].m_prevPoint;
+                Vector3 delta = markPoint - prev;
+                float moved = delta.magnitude;
+                if (moved < m_minMoveToAccumulate)
+                {
+                    // 距離が無くても滑るときはスタンプする 
+                    if (0.2f < smearW)
+                    {
+                        float skidBoost = Mathf.Lerp(1.0f, 1.6f, smearW); // 強スリップほど増やす
+                        manager.StampOne(markPoint, transform.forward * laneForwardSign, markStrength * smearW * skidBoost,
+                            TrackMarks.TrackMarkManager.TrackStampKind.Smear);
+                    }
+                    continue;
+                }
+
+                float accum = m_caterpillarAccums[i].m_accum;
+                accum += moved;
+                int safety = 0;
+
+                // 推すべき次の距離を計算して線分上で補間 
+                while (m_trackPitch <= accum && safety++ < m_maxStapsPerFrame)
+                {
+                    accum -= m_trackPitch;
+                    float back = accum;
+                    float lerpT = 1.0f - Mathf.Clamp01(back / moved);
+                    Vector3 stampPos = Vector3.Lerp(prev, markPoint, lerpT);
+                    Vector3 forward = transform.forward * laneForwardSign;
+                    //manager.StampOne(stampPos, forward, markStrength, kind);
+
+                    if (0.001f < blockW)
+                    {
+                        manager.StampOne(stampPos, forward, markStrength * blockW,
+                            TrackMarks.TrackMarkManager.TrackStampKind.Block);
+                    }
+                    if (0.001f < smearW)
+                    {
+                        manager.StampOne(stampPos, forward, markStrength * smearW,
+                            TrackMarks.TrackMarkManager.TrackStampKind.Smear);
+                    }
+                }
+
+                // 更新 
+                m_caterpillarAccums[i].m_accum = accum;
+                m_caterpillarAccums[i].m_prevPoint = markPoint;
+
+            }
+        }
+
+
+        #endregion
+
+
     }
 
 

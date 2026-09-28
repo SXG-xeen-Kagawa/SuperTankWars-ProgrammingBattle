@@ -567,6 +567,7 @@ namespace SXG2025
                 else
                 {
                     playerSheet.m_comPlayer.enabled = true;
+                    playerSheet.m_baseTank.PauseSubSystem(false);
                 }
             }
 
@@ -588,7 +589,12 @@ namespace SXG2025
                 if (playerSheet.m_baseTank != null)
                 {
                     playerSheet.m_baseTank.ResetControl();
-                    playerSheet.m_comPlayer.enabled = false;    // スクリプトも止めておく
+                    playerSheet.m_baseTank.PauseSubSystem(true);
+
+                    if (playerSheet.m_comPlayer != null)
+                    {
+                        playerSheet.m_comPlayer.enabled = false;    // スクリプトも止めておく
+                    }
                 }
             }
 
