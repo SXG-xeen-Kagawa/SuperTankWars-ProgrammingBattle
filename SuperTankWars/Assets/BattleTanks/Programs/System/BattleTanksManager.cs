@@ -953,7 +953,8 @@ namespace SXG2025
                     {
                         entrySheet.m_canShootFlag = true;
                         entrySheet.m_isInvincible = false;
-                    });
+                    },
+                    m_gameTeamColors[entrySheet.m_id]);
             }
 
             // 不要パートを削除 
