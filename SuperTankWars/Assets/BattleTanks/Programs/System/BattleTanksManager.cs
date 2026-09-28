@@ -32,6 +32,10 @@ namespace SXG2025
 
         [SerializeField] private GameObject m_turretPrefab = null; // 砲塔作り直し用
 
+        [SerializeField] private OutOfScreenTankIndicatorUIManager m_outOfScreenTankUIManager = null;
+        [SerializeField] private TankIconRenderCameraManager m_tankIconRenderCameraManager = null;
+
+
 #if RESULT_TEST
         const float GAME_PLAYING_TIME = 5.0f;
 #else
@@ -278,6 +282,8 @@ namespace SXG2025
 
             // プールに設定 
             m_cannonShellPool.SetObjectRootTr(m_gameWorldTr);
+
+            m_outOfScreenTankUIManager.SetTeamColors(m_gameTeamColors);
 
             // プレイヤー生成 
             for (int i=0; i < GameConstants.MAX_PLAYER_COUNT_IN_ONE_BATTLE; ++i)
@@ -1018,6 +1024,19 @@ namespace SXG2025
                     if (mf != null && mf.sharedMesh != null)
                         mc.sharedMesh = mf.sharedMesh;
                 }
+            }
+
+            RegisterTankUiTargets(entrySheet);
+        }
+
+
+
+
+        private void RegisterTankUiTargets(PlayerEntrySheet entrySheet)
+        {
+            if (m_tankIconRenderCameraManager != null && entrySheet.m_baseTank != null)
+            {
+                m_tankIconRenderCameraManager.SetTarget(entrySheet.m_id, entrySheet.m_baseTank.transform);
             }
         }
 
