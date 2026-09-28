@@ -1245,7 +1245,8 @@ namespace SXG2025
 
             try
             {
-                if (ParticipantSubmissionContextMenu.TryCreateZipFromParticipantFolder(folderAssetPath, out var zipFullPath, reveal: true))
+                if (ParticipantSubmissionContextMenu.TryCreateZipFromParticipantFolder(
+                    folderAssetPath, out var zipFullPath, out var assetCheckError, reveal: true))
                 {
                     EditorUtility.DisplayDialog("挑戦者出力", $"提出用ZIPを作成しました。\n{zipFullPath}", "OK");
                 }
@@ -1253,7 +1254,9 @@ namespace SXG2025
                 {
                     EditorUtility.DisplayDialog(
                         "挑戦者出力",
-                        "このPrefabは参加者フォルダ（Assets/Participant/Player…）配下ではないため、ZIPを作成できませんでした。",
+                        string.IsNullOrEmpty(assetCheckError)
+                            ? "このPrefabは参加者フォルダ（Assets/Participant/Player…）配下ではないため、ZIPを作成できませんでした。"
+                            : "提出用ZIPは作成していません。\n\n" + assetCheckError,
                         "OK"
                     );
                 }

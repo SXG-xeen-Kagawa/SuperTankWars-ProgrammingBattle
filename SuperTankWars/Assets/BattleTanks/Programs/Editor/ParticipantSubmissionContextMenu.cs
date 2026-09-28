@@ -1,5 +1,6 @@
 ﻿#if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
@@ -12,6 +13,9 @@ namespace SXG2025
     {
         const string ParticipantRoot = "Assets/Participant";
         const string BackupFolderName = "Backup";
+        const string GameAssetsRoot = "Assets/GameAssets/";
+        const string BattleTanksRoot = "Assets/BattleTanks/";
+        const string PackagesRoot = "Packages/";
 
         // Player1234567 / PlayerOtr1234567
         static readonly Regex PlayerFolderRegex = new Regex(@"^(Player|PlayerOtr)\d{7}(\b|[\s　＿_－\-・].*)?$", RegexOptions.Compiled);
@@ -34,6 +38,16 @@ namespace SXG2025
             string folderName = Path.GetFileName(assetPath);
             string zipBaseName = ExtractPlayerIdPrefix(folderName);
             string zipPath = Path.Combine(desktop, zipBaseName + ".zip");
+
+            string assetCheckError = CheckTankPrefabAssets(assetPath);
+            if (!string.IsNullOrEmpty(assetCheckError))
+            {
+                EditorUtility.DisplayDialog(
+                    "挑戦者出力",
+                    "提出用ZIPは作成していません。\n\n" + assetCheckError,
+                    "OK");
+                return;
+            }
 
 
             if (File.Exists(zipPath))
@@ -69,6 +83,85 @@ namespace SXG2025
             // 先頭が Player1234567 / PlayerOtr1234567 なら、その部分だけ返す
             var m = Regex.Match(folderName, @"^(Player|PlayerOtr)\d{7}");
             return m.Success ? m.Value : folderName;
+        }
+
+        static string CheckTankPrefabAssets(string participantFolderAssetPath)
+        {
+            var errors = new List<string>();
+            var checkedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { participantFolderAssetPath });
+
+            foreach (string prefabGuid in prefabGuids)
+            {
+                string prefabPath = AssetDatabase.GUIDToAssetPath(prefabGuid).Replace("\\", "/");
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                if (prefab == null || prefab.GetComponentsInChildren<ComPlayerBase>(true).Length == 0)
+                    continue;
+
+                foreach (string dependency in AssetDatabase.GetDependencies(prefabPath, true))
+                {
+                    string dependencyPath = dependency.Replace("\\", "/");
+                    if (IsAllowedAssetPath(dependencyPath, participantFolderAssetPath)
+                        || !IsCheckedAssetType(dependencyPath)
+                        || !checkedPaths.Add(dependencyPath))
+                        continue;
+
+                    errors.Add($"プレハブ：{prefabPath}\n外部アセット：{dependencyPath}");
+                }
+
+                CheckAssignedImages(prefab, prefabPath, participantFolderAssetPath, errors, checkedPaths);
+            }
+
+            if (errors.Count == 0)
+                return null;
+
+            return "[ERROR] 次のアセットが提出フォルダ外にあります。\n\n"
+                + string.Join("\n\n", errors);
+        }
+
+        static void CheckAssignedImages(GameObject prefab, string prefabPath,
+            string participantFolderAssetPath, List<string> errors, HashSet<string> checkedPaths)
+        {
+            foreach (ComPlayerBase comPlayer in prefab.GetComponentsInChildren<ComPlayerBase>(true))
+            {
+                var serializedObject = new SerializedObject(comPlayer);
+                CheckAssignedImage(serializedObject, "m_faceImage", "Face Image",
+                    prefabPath, participantFolderAssetPath, errors, checkedPaths);
+                CheckAssignedImage(serializedObject, "m_promoCardImage", "Promo Card Image",
+                    prefabPath, participantFolderAssetPath, errors, checkedPaths);
+            }
+        }
+
+        static void CheckAssignedImage(SerializedObject serializedObject, string propertyName, string label,
+            string prefabPath, string participantFolderAssetPath, List<string> errors, HashSet<string> checkedPaths)
+        {
+            SerializedProperty image = serializedObject.FindProperty(propertyName);
+            if (image == null || image.objectReferenceValue == null)
+                return;
+
+            string imagePath = AssetDatabase.GetAssetPath(image.objectReferenceValue).Replace("\\", "/");
+            if (IsAllowedAssetPath(imagePath, participantFolderAssetPath)
+                || !checkedPaths.Add(imagePath))
+                return;
+
+            errors.Add($"プレハブ：{prefabPath}\n{label}：{imagePath}");
+        }
+
+        static bool IsAllowedAssetPath(string assetPath, string participantFolderAssetPath)
+        {
+            return assetPath.StartsWith(GameAssetsRoot, StringComparison.OrdinalIgnoreCase)
+                || assetPath.StartsWith(BattleTanksRoot, StringComparison.OrdinalIgnoreCase)
+                || assetPath.StartsWith(PackagesRoot, StringComparison.OrdinalIgnoreCase)
+                || assetPath.StartsWith(participantFolderAssetPath + "/", StringComparison.OrdinalIgnoreCase);
+        }
+
+        static bool IsCheckedAssetType(string assetPath)
+        {
+            Type assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
+            return assetType != null
+                && (typeof(Material).IsAssignableFrom(assetType)
+                    || typeof(Texture).IsAssignableFrom(assetType)
+                    || typeof(Sprite).IsAssignableFrom(assetType));
         }
 
 
@@ -147,7 +240,14 @@ namespace SXG2025
 
         public static bool TryCreateZipFromParticipantFolder(string participantFolderAssetPath, out string zipFullPath, bool reveal = true)
         {
+            return TryCreateZipFromParticipantFolder(participantFolderAssetPath, out zipFullPath, out _, reveal);
+        }
+
+        public static bool TryCreateZipFromParticipantFolder(string participantFolderAssetPath,
+            out string zipFullPath, out string assetCheckError, bool reveal = true)
+        {
             zipFullPath = null;
+            assetCheckError = null;
 
             if (string.IsNullOrEmpty(participantFolderAssetPath))
                 return false;
@@ -164,6 +264,13 @@ namespace SXG2025
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             string zipBaseName = ExtractPlayerIdPrefix(folderName);
             zipFullPath = Path.Combine(desktop, zipBaseName + ".zip");
+
+            assetCheckError = CheckTankPrefabAssets(participantFolderAssetPath);
+            if (!string.IsNullOrEmpty(assetCheckError))
+            {
+                zipFullPath = null;
+                return false;
+            }
 
             if (File.Exists(zipFullPath))
                 File.Delete(zipFullPath);
