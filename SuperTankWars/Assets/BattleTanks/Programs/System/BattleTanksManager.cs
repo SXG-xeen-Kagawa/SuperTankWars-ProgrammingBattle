@@ -1082,6 +1082,7 @@ namespace SXG2025
         {
             var tank = Instantiate(PrefabHolder.Instance.BaseTankPrefab, m_gameWorldTr);
             tank.transform.SetPositionAndRotation(worldPosition, worldRotation);
+            tank.SetBattleArea(GameDataHolder.Instance.DataGame);
             tank.SetTeam(teamNo, m_gameTeamColors[teamNo]);
             tank.SetCannonShellDelegate(GetNewCannonShell, ReleaseCannonShell);
             tank.SetDestroiedTankDelegate(DestroiedTankCallback);

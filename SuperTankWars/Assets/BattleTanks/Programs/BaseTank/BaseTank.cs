@@ -47,6 +47,12 @@ namespace SXG2025
         private Rigidbody m_rigidbody = null;
         private bool m_isDestroied = false;
 
+        private Vector3 m_battleAreaCenter = Vector3.zero;
+        private float m_battleAreaRadius = 0.0f;
+        private float m_battleAreaReturnForce = 0.0f;
+        private float m_battleAreaSphereCenterY = 0;
+        private float m_battleAreaCoeffY = 1.0f;
+
         private Material m_materialInstance = null;
         private Material m_materialInstance2 = null;
 
@@ -64,6 +70,17 @@ namespace SXG2025
         {
             m_rigidbody = GetComponent<Rigidbody>();
         }
+
+
+        internal void SetBattleArea(DataFormatGame data)
+        {
+            m_battleAreaCenter = data.m_battleAreaCenter;
+            m_battleAreaRadius = Mathf.Max(0.0f, data.m_battleAreaRadius);
+            m_battleAreaSphereCenterY = data.m_battleAreaSphereCenterY;
+            m_battleAreaCoeffY = data.m_battleAreaCoeffY;
+            m_battleAreaReturnForce = Mathf.Max(0.0f, data.m_battleAreaPushForceAcc);
+        }
+
 
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -300,7 +317,36 @@ namespace SXG2025
             float yawRad = Vector3.Dot(m_rigidbody.angularVelocity, transform.up);
             m_angularMax = Mathf.Max(Mathf.Abs(yawRad), m_angularMax);
             //Debug.Log("[Angular] " + this.name + " / " + yawRad + "(" + m_angularMax + ") | T=" + Time.frameCount);
+
+            // 奈落に落ちた戦車は、落下判定を優先して救済しない。
+            if (!m_isDestroied
+                && m_battleAreaReturnForce > 0.0f)
+            {
+                CheckBattleArea();
+            }
         }
+
+        private void CheckBattleArea()
+        {
+            // 高度チェック
+            if (transform.position.y < m_battleAreaSphereCenterY)
+            {
+                return;
+            }
+
+            // バトルエリア判定 
+            Vector3 toBase = (m_battleAreaCenter + Vector3.up * m_battleAreaSphereCenterY) - transform.position;
+            toBase.y *= m_battleAreaCoeffY;   // Y方向は範囲を狭くする 
+            float radiusSqr = m_battleAreaRadius * m_battleAreaRadius;
+            if (toBase.sqrMagnitude > radiusSqr)
+            {
+                Vector3 toCenter = m_battleAreaCenter - transform.position;
+                m_rigidbody.AddForce(
+                    toCenter.normalized * m_battleAreaReturnForce,
+                    ForceMode.Acceleration);
+            }
+        }
+
 
 
         /// <summary>
