@@ -37,29 +37,12 @@ namespace SXG2025
         private string m_promoImagePath = "";
 
 
-        public enum EntryMethod
-        {
-            Connpass,
-            Other
-        }
-
-
         private class Data : ScriptableSingleton<Data>
         {
-            /// <summary>
-            /// 申し込みサイト
-            /// </summary>
-            public EntryMethod entryMethod = EntryMethod.Connpass;
-
             /// <summary>
             /// 申込時に発行される参加番号（7桁）
             /// </summary>
             public int participantID = 0;
-
-            /// <summary>
-            /// EntryMethod.Other用のランダム値 
-            /// </summary>
-            public int randomID = 0;
 
             /// <summary>
             /// 所属名
@@ -86,13 +69,7 @@ namespace SXG2025
 
             public string GetName()
             {
-                if (entryMethod == EntryMethod.Connpass)
-                {
-                    return $"Player{participantID:D7}";
-                } else
-                {
-                    return $"PlayerOtr{randomID:D7}";
-                }
+                return $"Player{participantID:D7}";
             }
         }
 
@@ -113,41 +90,13 @@ namespace SXG2025
             GUILayout.Space(10);
             GUILayout.Label("■必須項目");
 
-            GUILayout.Label("　エントリーしたサイトを選んでください。");
-
-            data.entryMethod = (EntryMethod)GUILayout.Toolbar(
-                (int)data.entryMethod,
-                new[] { "connpass", "Peatix／その他" }
-            );
-
-            GUILayout.Space(6);
-
             using (new GUILayout.HorizontalScope())
             {
-                if (data.entryMethod == EntryMethod.Connpass)
-                {
-                    var id = EditorGUILayout.IntField("　参加ID（受付番号）:", data.participantID);
-                    data.participantID = Mathf.Clamp(id, 0, MAX_ID);
-                }
-                else
-                {
-                    if (data.randomID <= 0)
-                        data.randomID = GenerateOtherEntryId();
-
-                    EditorGUILayout.LabelField("　参加ID:", data.randomID.ToString());
-
-                    if (GUILayout.Button("再生成", GUILayout.Width(60), GUILayout.Height(18)))
-                    {
-                        data.randomID = GenerateOtherEntryId();
-                        GUI.FocusControl("");
-                    }
-                }
+                var id = EditorGUILayout.IntField("　参加ID（受付番号）:", data.participantID);
+                data.participantID = Mathf.Clamp(id, 0, MAX_ID);
             }
 
-            if (data.entryMethod == EntryMethod.Connpass)
-                EditorGUILayout.HelpBox("connpassの「受付番号」を入力してください。", MessageType.Info);
-            else
-                EditorGUILayout.HelpBox("受付番号がないため、参加IDは自動で割り当てます（変更不要）。", MessageType.Info);
+            EditorGUILayout.HelpBox("connpassの「受付番号」を入力してください。", MessageType.Info);
 
             GUILayout.Space(20);
             GUILayout.Label("■任意項目（後から変更可）");
@@ -215,7 +164,7 @@ namespace SXG2025
 
             // 作成可否（最低限の事故防止）
             bool canCreate = true;
-            if (data.entryMethod == EntryMethod.Connpass && data.participantID <= 0)
+            if (data.participantID <= 0)
                 canCreate = false;
 
             using (new EditorGUI.DisabledScope(!canCreate))
@@ -234,11 +183,6 @@ namespace SXG2025
 
  
 
-        private static int GenerateOtherEntryId()
-        {
-            return UnityEngine.Random.Range(1, MAX_ID+1);
-        }
-
         private void AddParticipant()
         {
             var data = Data.instance;
@@ -248,9 +192,7 @@ namespace SXG2025
 
             if (Directory.Exists(folderPath))
             {
-                string error = data.entryMethod == EntryMethod.Connpass
-                    ? $"!!ERROR!!\n\n参加番号:{data.participantID} の戦車は既に作成済みです。 \n- {folderPath}"
-                    : $"!!ERROR!!\n\n参加ID:{data.randomID} の戦車は既に作成済みです。 \n- {folderPath}";
+                string error = $"!!ERROR!!\n\n参加番号:{data.participantID} の戦車は既に作成済みです。 \n- {folderPath}";
 
                 Debug.LogError(error);
                 EditorUtility.DisplayDialog("挑戦者登録", error, "OK");
@@ -468,15 +410,8 @@ namespace SXG2025
                     AssetDatabase.OpenAsset(prefabAsset);
 
                     // 確認ダイアログ表示 
-                    if (Data.instance.entryMethod == EntryMethod.Connpass)
-                    {
-                        EditorUtility.DisplayDialog("挑戦者登録",
-                            $"参加番号:{Data.instance.participantID} のAIを準備しました。\n{folderPath}", "OK");
-                    } else
-                    {
-                        EditorUtility.DisplayDialog("挑戦者登録",
-                            $"参加ID:{Data.instance.randomID} のAIを準備しました。\n{folderPath}", "OK");
-                    }
+                    EditorUtility.DisplayDialog("挑戦者登録",
+                        $"参加番号:{Data.instance.participantID} のAIを準備しました。\n{folderPath}", "OK");
 
                     // ダイアログ閉じたらウインドウも閉じる(1フレーム後)
                     EditorApplication.delayCall += () =>
