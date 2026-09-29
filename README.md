@@ -101,8 +101,8 @@ Unity初心者の方でも、サンプルコードや「かんたんAI作成機�
 - 募集開始予定：2026年10月1日
 - イベント開催予定：2026年11月15日
 - 提出締切：【SXG2026の提出締切を設定】
-- connpassページ：https://XXX/connpass
-- 提出フォーム：https://XXX/submission
+- connpassページ：https://connpass.com/event/408297/
+- 提出フォーム：https://forms.gle/DuWm4o32XAxjv1a16
 
 <br>
 
@@ -112,7 +112,7 @@ Unity初心者の方でも、サンプルコードや「かんたんAI作成機�
 
 イベントやAI作成に関するお問い合わせは、イベントページからお願いします。
 
-- connpassページ：https://XXX/connpass
+- connpassページ：https://connpass.com/event/408297/
 
 <br>
 

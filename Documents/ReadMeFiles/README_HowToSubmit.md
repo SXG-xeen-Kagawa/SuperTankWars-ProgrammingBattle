@@ -56,7 +56,7 @@ Unityプロジェクト全体や、提出用ZIP以外のファイルは提出し
 
 提出用Googleフォームへ、作成したZIPファイルを添付して送信してください。
 
-- 提出フォーム：**https://XXX/submission**
+- 提出フォーム：**https://forms.gle/DuWm4o32XAxjv1a16**
 - 提出締切：**2026年11月8日（日）23:59**
 
 締切までであれば再提出できます。複数回提出した場合は、**最後に提出されたZIP**を採用します。
@@ -81,4 +81,4 @@ Unityプロジェクト全体や、提出用ZIP以外のファイルは提出し
 
 運営からの連絡はイベントページ等で行います。
 
-- connpassページ：**https://XXX/connpass**
+- connpassページ：**https://connpass.com/event/408297/**
