@@ -16,6 +16,7 @@ namespace SXG2025
         const string GameAssetsRoot = "Assets/GameAssets/";
         const string BattleTanksRoot = "Assets/BattleTanks/";
         const string PackagesRoot = "Packages/";
+        const string FreeAssetsRoot = "Assets/FreeAssets/";
 
         // Player1234567 / PlayerOtr1234567
         static readonly Regex PlayerFolderRegex = new Regex(@"^(Player|PlayerOtr)\d{7}(\b|[\s　＿_－\-・].*)?$", RegexOptions.Compiled);
@@ -152,6 +153,7 @@ namespace SXG2025
             return assetPath.StartsWith(GameAssetsRoot, StringComparison.OrdinalIgnoreCase)
                 || assetPath.StartsWith(BattleTanksRoot, StringComparison.OrdinalIgnoreCase)
                 || assetPath.StartsWith(PackagesRoot, StringComparison.OrdinalIgnoreCase)
+                || assetPath.StartsWith(FreeAssetsRoot, StringComparison.OrdinalIgnoreCase)
                 || assetPath.StartsWith(participantFolderAssetPath + "/", StringComparison.OrdinalIgnoreCase);
         }
 
