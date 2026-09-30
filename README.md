@@ -31,12 +31,11 @@
 
 Unityエディタで戦車の形をカスタマイズし、C#で戦い方を自由にプログラミングできます。
 
-1. SXG2026向けUnityプロジェクトの配布ページを開きます。
-2. **Assets**からSXG2026向けのプロジェクトZIPをダウンロードします。
+1. 以下のリンクから、SXG2026向けUnityプロジェクトの配布ページを開きます。
+2. ページ下部の **Assets** にある **Source code (zip)** をダウンロードします。
 3. ZIPを展開して、Unity Hubでプロジェクトを開きます。
 
-SXG2026向けUnityプロジェクトの配布ページ：
-https://github.com/SXG-xeen-Kagawa/SuperTankWars-ProgrammingBattle/releases/tag/sxg2026-v1.0.0
+[**SXG2026向けUnityプロジェクトをダウンロード（GitHub Releases）**](https://github.com/SXG-xeen-Kagawa/SuperTankWars-ProgrammingBattle/releases/tag/sxg2026-v1.0.0)
 
 
 

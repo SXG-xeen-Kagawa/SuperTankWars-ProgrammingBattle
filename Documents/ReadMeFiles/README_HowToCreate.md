@@ -23,10 +23,15 @@ SXG2026の参加エントリーはconnpassで受け付けます。
 ## AI新規作成方法
 
 ここからUnityエディタ上での作業になります。
-SXG2026向けUnityプロジェクトの配布ページからZIPをダウンロードして展開し、Unity Hubでプロジェクトを開いてください。
 
-- SXG2026向けUnityプロジェクトの配布ページ：**https://github.com/SXG-xeen-Kagawa/SuperTankWars-ProgrammingBattle/releases/tag/sxg2026-v1.0.0**
-- Unityバージョン：**Unity 6000.3.24f1**
+以下の配布ページを開き、ページ下部の **Assets** にある **Source code (zip)** をダウンロードしてください。
+ZIPを展開し、Unity Hubでプロジェクトを開いてください。
+
+[**SXG2026向けUnityプロジェクトをダウンロード（GitHub Releases）**](https://github.com/SXG-xeen-Kagawa/SuperTankWars-ProgrammingBattle/releases/tag/sxg2026-v1.0.0)
+
+使用するUnityバージョンは **Unity 6000.3.24f1** です。
+
+
 
 ---
 ### 1. Unity上部メニューから「挑戦者作成」を開く
