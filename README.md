@@ -17,7 +17,9 @@
 | **Unityプロジェクトで制作する** | Unityエディタで戦車をカスタマイズし、C#でAIをプログラミングできます。より複雑な動きや独自の作戦を実装したい方はこちらをご利用ください。 |
 | **ゲーム版で制作する** | Unityのインストールやプログラミングは不要です。ゲーム内の操作でパーツを配置し、戦い方を選んで戦車を作成できます。 |
 
-どちらの方法でも、作成した戦車を提出用ZIPとして出力し、同じ提出フォームから提出できます。
+どちらの方法でも、作成した戦車を提出用ZIPとして出力できます。
+
+**提出先・提出方法は後日、[connpassのイベントページ](https://connpass.com/event/408297/)でお知らせします。** 先にエントリーと戦車の制作を進め、出力した提出用ZIPは、提出先の発表まで保管してください。
 
 <br>
 
@@ -36,8 +38,6 @@ Unityエディタで戦車の形をカスタマイズし、C#で戦い方を自�
 3. ZIPを展開して、Unity Hubでプロジェクトを開きます。
 
 [**SXG2026向けUnityプロジェクトをダウンロード（GitHub Releases）**](https://github.com/SXG-xeen-Kagawa/SuperTankWars-ProgrammingBattle/releases/tag/sxg2026-v1.0.0)
-
-
 
 <div align="center">
   <img width="880" alt="ReleasesのAssetsからZIPをダウンロードする操作例" src="Documents/ReadMeImages/Top/002.png" />
@@ -68,7 +68,7 @@ Unityやプログラミングを使わずに挑戦したい方には、ゲーム
 
 ゲーム内の操作でパーツを配置し、戦い方を選んで戦車を作成できます。完成した戦車は、ゲーム版から提出用ZIPとして出力できます。
 
-[SXG2026向けゲーム版をダウンロード（Google Drive）](https://drive.google.com/drive/folders/1m00FQ0ofT7j6CGE_SOgozsvLqyQAH3VM?usp=drive_link)
+[SXG2026向けゲーム版をダウンロード（Google Drive）](https://drive.google.com/drive/folders/1m00FQ0ofT7j6CGE_SOgozsvLqyQAH3VM)
 
 リンク先の公開フォルダから、最新版のゲーム版をダウンロードしてください。
 
@@ -106,7 +106,8 @@ Unityやプログラミングを使わずに挑戦したい方には、ゲーム
 2. [『AI作成手順』](Documents/ReadMeFiles/README_HowToCreate.md)に沿って、受付番号を入力し、挑戦者（戦車）を作成します。
 3. [『戦車のカスタマイズ方法』](Documents/ReadMeFiles/README_HowToCustomizeTank.md)を見ながら、砲塔や装甲を追加して試運転します。
 4. [『リファレンス』](Documents/ReadMeFiles/README_Reference.md)を確認しながら、C#で戦い方を調整します。
-5. [『戦車の提出手順』](Documents/ReadMeFiles/README_HowToSubmit.md)に沿って、提出用ZIPを作成して提出します。
+5. [『戦車の提出手順』](Documents/ReadMeFiles/README_HowToSubmit.md)に沿って、提出用ZIPを作成し、提出先の発表まで保管します。
+6. 後日、connpassのイベントページで案内する方法に従って、締切までに提出します。
 
 プログラムが苦手な方や、アイデアが欲しい方は、[『かんたんAI作成機能』](Documents/ReadMeFiles/README_HowToEasyAI.md)もご利用ください。
 
@@ -116,8 +117,8 @@ Unityやプログラミングを使わずに挑戦したい方には、ゲーム
 2. [『ゲーム版：ダウンロード・戦車作成・提出ガイド』](Documents/ReadMeFiles/README_GameVersionGuide.md)に沿って、ゲーム版をダウンロードして起動します。
 3. 戦車を作成し、パーツの配置や戦い方を調整します。
 4. 対戦で動作を確認し、必要に応じて戦車を調整します。
-5. 戦車をセーブし、戦車格納庫の「戦車データを出力」から受付番号を入力して、提出用ZIPを出力します。
-6. [『戦車の提出手順』](Documents/ReadMeFiles/README_HowToSubmit.md)に沿って提出します。
+5. 戦車をセーブし、戦車格納庫の「戦車データを出力」から受付番号を入力して、提出用ZIPを出力し、提出先の発表まで保管します。
+6. 後日、connpassのイベントページで案内する方法に従って、締切までに提出します。詳しくは[『戦車の提出手順』](Documents/ReadMeFiles/README_HowToSubmit.md)をご確認ください。
 
 ### 📦 提出用ZIPについて
 
@@ -131,9 +132,11 @@ Unityやプログラミングを使わずに挑戦したい方には、ゲーム
 どちらも、ファイル名の先頭は `SXG2026_Tank_(connpass受付番号)` です。
 Unityプロジェクトから出力したZIPには `Editor`、ゲーム版から出力したZIPには `Player` が含まれます。
 
-自分のconnpass受付番号が入っていることを確認し、出力されたZIPを解凍せず、そのまま提出してください。
+自分のconnpass受付番号が入っていることを確認し、出力されたZIPは解凍せず、中身を変更せずに、提出先の発表まで保管してください。後日案内する方法で、ZIPをそのまま提出してください。
 
 **Unityプロジェクト全体やゲーム版本体ではなく、作成した戦車の提出用ZIPを提出してください。**
+
+**connpassへのエントリーや提出用ZIPの出力だけでは、作品の応募は完了しません。締切までに、後日案内する方法で提出する必要があります。**
 
 <br>
 
@@ -168,11 +171,13 @@ Unityプロジェクトで制作する場合は、Unityエディタで戦車を�
 
 Unityやプログラミングが初めての方は、ゲーム版で戦車を制作して参加することもできます。
 
-- 募集開始予定は、2026年10月1日です。
-- イベント開催予定は、2026年11月15日です。
-- 提出締切は、**2026年11月8日（日）23:59**です。
+- 募集開始は、2026年10月1日（木）00:00です。
+- イベント開催は、2026年11月15日（日）です。
+- connpass申込・作品提出の締切は、**2026年11月8日（日）23:59**です。
 - エントリーは、[connpassページ](https://connpass.com/event/408297/)からお願いします。
-- 戦車の提出は、[提出フォーム](https://forms.gle/DuWm4o32XAxjv1a16)からお願いします。
+- **提出先・提出方法は後日、connpassのイベントページでお知らせします。** 提出用ZIPを出力し、提出先の発表まで保管してください。
+
+締切までであれば再提出できます。複数回提出した場合は、**最後に提出されたZIP**を採用します。
 
 <br>
 
@@ -182,7 +187,7 @@ Unityやプログラミングが初めての方は、ゲーム版で戦車を制
 
 イベントや戦車の作成に関するお問い合わせは、イベントページからお願いします。
 
-connpassページ：https://connpass.com/event/408297/
+[connpassのイベントページ](https://connpass.com/event/408297/)
 
 <br>
 
@@ -190,9 +195,9 @@ connpassページ：https://connpass.com/event/408297/
 
 ## 🔗 関連リンク（PV・公式記事など）
 
-- PV（まずはこちら）：https://youtu.be/TrEf7w3QpWI
-- チャンネル：https://www.youtube.com/@xeenjp
-- 公式X：https://x.com/xeenjp
-- 2026-02-12：TIGS2026 プロバト参加者募集：https://www.xeen.co.jp/staffblog/2026/02/staffblog-20250212.html
-- 2025-10-01：SXG2025 出展紹介：https://www.xeen.co.jp/staffblog/2025/10/blog-20251001.html
-- 2025-11-19：イベントレポート：https://www.xeen.co.jp/staffblog/2025/11/staffblog-20251119.html
+- まずは[PV](https://youtu.be/TrEf7w3QpWI)をご覧ください。
+- 動画は[公式YouTubeチャンネル](https://www.youtube.com/@xeenjp)で公開しています。
+- 最新の発信は[公式X](https://x.com/xeenjp)をご確認ください。
+- 2026年2月12日の記事：[TIGS2026 プロバト参加者募集](https://www.xeen.co.jp/staffblog/2026/02/staffblog-20250212.html)。
+- 2025年10月1日の記事：[SXG2025 出展紹介](https://www.xeen.co.jp/staffblog/2025/10/blog-20251001.html)。
+- 2025年11月19日の記事：[イベントレポート](https://www.xeen.co.jp/staffblog/2025/11/staffblog-20251119.html)。
