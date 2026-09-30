@@ -394,7 +394,7 @@ void SXG_RotateTurretToImpactPoint(int turretId, Vector3 impactPoint);
 
 void SXG_RotateJointToDirection(int jointId, float yawDir);
 
-- yarDir : 左右の旋回：-1 ～ +1：右方向がプラス、左方向がマイナス
+- yawDir : 左右の旋回：-1 ～ +1：右方向がプラス、左方向がマイナス
 
 ジョイント番号を指定して、ジョイント関節の回転方法を指定して砲塔を旋回させます。
 範囲外の番号を指定するとアサーションが発生します。
@@ -405,7 +405,7 @@ void SXG_RotateJointToDirection(int jointId, float yawDir);
 
 void SXG_RotateJointToAngle(int jointId, float yawAngle);
 
-- yarAngle : 左右の旋回：戦車の正面が0度：右方向がプラス、左方向がマイナス
+- yawAngle : 左右の旋回：戦車の正面が0度：右方向がプラス、左方向がマイナス
 
 ジョイント番号を指定して、ローカル角度（ヨー）を指定してジョイントを旋回させます。
 範囲外の番号を指定するとアサーションが発生します。
