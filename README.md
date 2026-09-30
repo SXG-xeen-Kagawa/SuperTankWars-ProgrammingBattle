@@ -36,7 +36,9 @@ Unityエディタで戦車の形をカスタマイズし、C#で戦い方を自�
 3. ZIPを展開して、Unity Hubでプロジェクトを開きます。
 
 SXG2026向けUnityプロジェクトの配布ページ：
-https://XXX/sxg2026-unity-release
+https://github.com/SXG-xeen-Kagawa/SuperTankWars-ProgrammingBattle/releases/tag/sxg2026-v1.0.0
+
+
 
 <div align="center">
   <img width="880" alt="ReleasesのAssetsからZIPをダウンロードする操作例" src="Documents/ReadMeImages/Top/002.png" />

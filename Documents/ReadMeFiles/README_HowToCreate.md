@@ -25,7 +25,7 @@ SXG2026の参加エントリーはconnpassで受け付けます。
 ここからUnityエディタ上での作業になります。
 SXG2026向けUnityプロジェクトの配布ページからZIPをダウンロードして展開し、Unity Hubでプロジェクトを開いてください。
 
-- SXG2026向けUnityプロジェクトの配布ページ：**https://XXX/sxg2026-unity-release**
+- SXG2026向けUnityプロジェクトの配布ページ：**https://github.com/SXG-xeen-Kagawa/SuperTankWars-ProgrammingBattle/releases/tag/sxg2026-v1.0.0**
 - Unityバージョン：**Unity 6000.3.24f1**
 
 ---
