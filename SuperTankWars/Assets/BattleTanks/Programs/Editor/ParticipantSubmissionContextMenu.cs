@@ -37,7 +37,7 @@ namespace SXG2025
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             //string zipPath = Path.Combine(desktop, folderName + ".zip");
             string folderName = Path.GetFileName(assetPath);
-            string zipBaseName = ExtractPlayerIdPrefix(folderName);
+            string zipBaseName = CreateSubmissionZipBaseName(folderName);
             string zipPath = Path.Combine(desktop, zipBaseName + ".zip");
 
             string assetCheckError = CheckTankPrefabAssets(assetPath);
@@ -79,11 +79,11 @@ namespace SXG2025
             }
         }
 
-        static string ExtractPlayerIdPrefix(string folderName)
+        static string CreateSubmissionZipBaseName(string folderName)
         {
-            // 先頭が Player1234567 / PlayerOtr1234567 なら、その部分だけ返す
-            var m = Regex.Match(folderName, @"^(Player|PlayerOtr)\d{7}");
-            return m.Success ? m.Value : folderName;
+            var m = Regex.Match(folderName, @"^(?:Player|PlayerOtr)(\d+)");
+            string connpassId = m.Success ? m.Groups[1].Value : folderName;
+            return $"SXG2026_Tank_{connpassId}_Editor_{DateTime.Now:yyyyMMdd_HHmmss}";
         }
 
         static string CheckTankPrefabAssets(string participantFolderAssetPath)
@@ -264,7 +264,7 @@ namespace SXG2025
                 return false;
 
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            string zipBaseName = ExtractPlayerIdPrefix(folderName);
+            string zipBaseName = CreateSubmissionZipBaseName(folderName);
             zipFullPath = Path.Combine(desktop, zipBaseName + ".zip");
 
             assetCheckError = CheckTankPrefabAssets(participantFolderAssetPath);
