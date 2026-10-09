@@ -918,6 +918,82 @@ namespace SXG2025
         }
 
 
+        /// <summary>
+        /// スケール変更対策として砲塔を再生成し、
+        /// 計量用リストの参照と操作用砲塔配列を更新する。
+        /// </summary>
+        private void RebuildTurretsForScaleAdjustment(
+            PlayerEntrySheet entrySheet)
+        {
+            // 砲塔を作り直す（スケール変更対策）
+            // ※リストに入っていない砲塔は対象外
+            // ※砲塔内に装甲パーツなど入れていれば消える
+            // ※もしレギュレーション違反となる位置になっても削除されない
+            entrySheet.m_comPlayer.GetTurrets((turrets) =>
+            {
+                var posCashes = new UnityEngine.Vector3[turrets.Length];
+                var rotCashes = new UnityEngine.Quaternion[turrets.Length];
+                var parentCashes = new UnityEngine.Transform[turrets.Length];
+
+                for (int i = 0; i < turrets.Length; i++)
+                {
+                    var turretPart = turrets[i];
+                    if (turretPart == null)
+                    {
+                        continue;
+                    }
+
+                    var oldPartTr = turretPart.transform;
+
+                    posCashes[i] = oldPartTr.position;
+                    rotCashes[i] = oldPartTr.rotation;
+                    parentCashes[i] = oldPartTr.parent;
+
+                    // 親が砲塔だった場合はComPlayer直下に置く
+                    if (parentCashes[i] != null
+                        && parentCashes[i]
+                            .GetComponentInParent<TurretPart>() != null)
+                    {
+                        parentCashes[i] = entrySheet.m_comPlayer.transform;
+                    }
+
+                    var newTurretObject = Instantiate(
+                        m_turretPrefab,
+                        posCashes[i],
+                        rotCashes[i],
+                        parentCashes[i]);
+
+                    var newTurretPart =
+                        newTurretObject.GetComponent<TurretPart>();
+
+                    if (newTurretPart == null)
+                    {
+                        UnityEngine.Debug.LogError(
+                            "BattleTanksManager: 再生成用砲塔Prefabに"
+                            + "TurretPartがありません。");
+
+                        Destroy(newTurretObject);
+                        continue;
+                    }
+
+                    // 元砲塔を削除する前に、計量用リストの参照を更新する。
+                    entrySheet.m_baseTank.ReplaceMeasuredPartTransform(
+                        oldPartTr,
+                        newTurretPart.transform);
+
+                    // 操作用砲塔配列も新しい砲塔へ更新する。
+                    turrets[i] = newTurretPart;
+
+                    Destroy(turretPart.gameObject);
+                }
+
+                // 再生成した砲塔に、多数砲塔構成の防御弱化を適用する。
+                ApplyTurretDefenseReduction(turrets);
+            });
+        }
+
+
+
 
 
         // 戦車生成 
@@ -979,7 +1055,7 @@ namespace SXG2025
                 {
                     // body（もしくはfullBody）オブジェクトを基準にする
                     var bodyMeshRenderer = meshes.Find(_ => (_.gameObject.name == "body" || _.gameObject.name == "fullBody"));
-                    if (tankBounds != null)
+                    if (bodyMeshRenderer != null)
                     {
                         tankBounds = bodyMeshRenderer.bounds;
                     }
@@ -1030,48 +1106,8 @@ namespace SXG2025
             }
 
             // 砲塔を作り直す（スケール変更対策）
-            // ※リストに入っていない砲塔は対象外
-            // ※砲塔内に装甲パーツなど入れていれば消える
-            // ※もしレギュレーション違反となる位置になっても削除されない
-            entrySheet.m_comPlayer.GetTurrets((turrets) =>
-            {
-                var posCashes = new Vector3[turrets.Length];
-                var rotCashes = new Quaternion[turrets.Length];
-                var parentCashes = new Transform[turrets.Length];
+            RebuildTurretsForScaleAdjustment(entrySheet);
 
-                for (int i = 0; i < turrets.Length; i++)
-                {
-                    var turretPart = turrets[i];
-                    if (turretPart == null)
-                    {
-                        continue;
-                    }
-
-                    posCashes[i] = turretPart.transform.position;
-                    rotCashes[i] = turretPart.transform.rotation;
-                    parentCashes[i] = turretPart.transform.parent;
-
-                    // 親が砲塔だった場合はComPlayer直下に置く
-                    if (parentCashes[i] != null
-                        && parentCashes[i].GetComponentInParent<TurretPart>() != null)
-                    {
-                        parentCashes[i] = entrySheet.m_comPlayer.transform;
-                    }
-
-                    Destroy(turretPart.gameObject);
-
-                    turrets[i] = Instantiate(
-                        m_turretPrefab,
-                        posCashes[i],
-                        rotCashes[i],
-                        parentCashes[i])
-                        .GetComponent<TurretPart>();
-                }
-
-                // 再生成した砲塔に、多数砲塔構成の防御弱化を適用する。
-                ApplyTurretDefenseReduction(turrets);
-            });
-            
             // 戦車の有効な砲塔にカラーを設定する 
             entrySheet.m_comPlayer.SetTeamColor(entrySheet.m_baseTank.GetTeamColorMaterial());
             // 戦車の砲塔を駆動部に紐づける 
