@@ -861,11 +861,64 @@ namespace SXG2025
         }
 
 
-#endregion
+        #endregion
 
 
 
-#region 戦車管理 
+        #region 戦車管理 
+
+
+        // 多数砲塔構成の防御性能を調整する。
+        // 開発版と同じく、砲塔配列の長さで判定する。
+        private const int TURRET_DEFENSE_REDUCTION_MIN_COUNT = 10;
+
+        // 各砲塔について、Shellとの衝突を除外する確率（%）。
+        private const int TURRET_SHELL_COLLISION_EXCLUSION_PERCENT = 15;
+
+        // パーセント抽選の範囲。抽選値は0～99。
+        private const int PERCENT_RANDOM_RANGE = 100;
+
+        /// <summary>
+        /// 多数砲塔構成に対して、各砲塔を個別に抽選し、
+        /// 当選した砲塔のShellとの衝突だけを除外する。
+        /// 地面など、他レイヤーとの衝突設定は変更しない。
+        /// </summary>
+        private static void ApplyTurretDefenseReduction(TurretPart[] turrets)
+        {
+            if (turrets == null
+                || turrets.Length < TURRET_DEFENSE_REDUCTION_MIN_COUNT)
+            {
+                return;
+            }
+
+            int shellLayerMask = 1 << Constants.OBJ_LAYER_SHELL;
+
+            foreach (var turret in turrets)
+            {
+                if (turret == null)
+                {
+                    continue;
+                }
+
+                if (UnityEngine.Random.Range(0, PERCENT_RANDOM_RANGE)
+                    >= TURRET_SHELL_COLLISION_EXCLUSION_PERCENT)
+                {
+                    continue;
+                }
+
+                var colliders = turret.GetComponentsInChildren<Collider>(true);
+
+                foreach (var col in colliders)
+                {
+                    // Collider自体は無効化しない。
+                    // 既存の除外設定を維持し、Shellだけを追加する。
+                    col.excludeLayers |= shellLayerMask;
+                }
+            }
+        }
+
+
+
 
         // 戦車生成 
         private void RemakePlayerTank(PlayerEntrySheet entrySheet, bool withCalculateCost=true, bool withShield=true)
@@ -985,26 +1038,40 @@ namespace SXG2025
                 var posCashes = new Vector3[turrets.Length];
                 var rotCashes = new Quaternion[turrets.Length];
                 var parentCashes = new Transform[turrets.Length];
+
                 for (int i = 0; i < turrets.Length; i++)
                 {
                     var turretPart = turrets[i];
-                    if (turretPart != null)
+                    if (turretPart == null)
                     {
-                        posCashes[i] = turretPart.transform.position;
-                        rotCashes[i] = turretPart.transform.rotation;
-                        parentCashes[i] = turretPart.transform.parent;
-
-                        // 親が砲塔だった場合はComPlayer直下に置く
-                        if (parentCashes[i].GetComponentInParent<TurretPart>() != null)
-                            parentCashes[i] = entrySheet.m_comPlayer.transform;
-
-                        Destroy(turretPart.gameObject);
-
-                        turrets[i] = Instantiate(m_turretPrefab, posCashes[i], rotCashes[i], parentCashes[i])
-                            .GetComponent<TurretPart>();
+                        continue;
                     }
+
+                    posCashes[i] = turretPart.transform.position;
+                    rotCashes[i] = turretPart.transform.rotation;
+                    parentCashes[i] = turretPart.transform.parent;
+
+                    // 親が砲塔だった場合はComPlayer直下に置く
+                    if (parentCashes[i] != null
+                        && parentCashes[i].GetComponentInParent<TurretPart>() != null)
+                    {
+                        parentCashes[i] = entrySheet.m_comPlayer.transform;
+                    }
+
+                    Destroy(turretPart.gameObject);
+
+                    turrets[i] = Instantiate(
+                        m_turretPrefab,
+                        posCashes[i],
+                        rotCashes[i],
+                        parentCashes[i])
+                        .GetComponent<TurretPart>();
                 }
+
+                // 再生成した砲塔に、多数砲塔構成の防御弱化を適用する。
+                ApplyTurretDefenseReduction(turrets);
             });
+            
             // 戦車の有効な砲塔にカラーを設定する 
             entrySheet.m_comPlayer.SetTeamColor(entrySheet.m_baseTank.GetTeamColorMaterial());
             // 戦車の砲塔を駆動部に紐づける 
