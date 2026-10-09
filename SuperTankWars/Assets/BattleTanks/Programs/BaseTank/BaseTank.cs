@@ -422,84 +422,118 @@ namespace SXG2025
 
 
         /// <summary>
-        /// ダメージを受ける 
+        /// ダメージを受ける
         /// </summary>
         /// <param name="damage"></param>
         /// <param name="collidedCollider"></param>
         /// <param name="contactPoint"></param>
         /// <param name="damageRadius"></param>
         /// <retval>なんらかダメージを与えたらtrue</retval>
-        internal bool PutDamageByShell(int attackTeamNo, int damage, Collider collidedCollider, Vector3 contactPoint, float damageRadius)
+        internal bool PutDamageByShell(
+            int attackTeamNo,
+            int damage,
+            Collider collidedCollider,
+            Vector3 contactPoint,
+            float damageRadius)
         {
-            DataFormatTank dataTank = GameDataHolder.Instance.DataTank;
+            // 初期計算・質量計算と同じ設定を使用する。
+            DataFormatTank dataTank = GetData();
 
-            // 部位にダメージ 
-            var collidedPart = m_tankPartsList.Find((a) => { return a.m_partTr == collidedCollider.transform; });
+            // 部位にダメージ
+            var collidedPart = m_tankPartsList.Find((a) =>
+            {
+                return a.m_partTr == collidedCollider.transform;
+            });
+
             if (collidedPart != null)
             {
                 if (collidedPart.m_durability < 0)
                 {
-                    return true;    // 既に耐久力無なら部位破壊済み 
+                    return true;    // 既に耐久力無なら部位破壊済み
                 }
 
-                Debug.Log("[Damage] " + collidedPart.m_partTr.name + " damage=" + damage 
-                    + " hp=" + collidedPart.m_durability + " => " + (collidedPart.m_durability-damage) + " | T=" + Time.frameCount);
+                Debug.Log("[Damage] " + collidedPart.m_partTr.name
+                    + " damage=" + damage
+                    + " hp=" + collidedPart.m_durability
+                    + " => " + (collidedPart.m_durability - damage)
+                    + " | T=" + Time.frameCount);
 
                 collidedPart.m_durability -= damage;
+
                 if (0 < collidedPart.m_durability)
                 {
-                    return true;     // 部位が破壊されていない
-                } else
+                    return true;    // 部位が破壊されていない
+                }
+                else
                 {
-                    // 部位を外す 
+                    // 部位を外す
                     collidedPart.m_partTr.parent = null;
-                    collidedPart.m_partTr.gameObject.layer = Constants.OBJ_LAYER_DROPPED_PART;
-                    Rigidbody rb = collidedPart.m_partTr.gameObject.AddComponent<Rigidbody>();
-                    rb.mass = (float)collidedPart.m_cost * dataTank.m_tankCostToMassCoef;
+                    collidedPart.m_partTr.gameObject.layer =
+                        Constants.OBJ_LAYER_DROPPED_PART;
 
-                    // 落下確認コンポーネント 
+                    Rigidbody rb =
+                        collidedPart.m_partTr.gameObject.AddComponent<Rigidbody>();
+
+                    rb.mass = (float)collidedPart.m_cost
+                        * dataTank.m_tankCostToMassCoef;
+
+                    // 落下確認コンポーネント
                     collidedPart.m_partTr.gameObject.AddComponent<DroppedPart>();
 
-                    // リストから外す 
+                    // リストから外す
                     m_tankPartsList.Remove(collidedPart);
 
-                    // 質量を再計算 
-                    int cost = 0;
+                    // 質量を再計算
+                    // 初期計算と同様に、基礎コストを含める。
+                    int cost = dataTank.m_tankBasePartCost;
+
                     foreach (var part in m_tankPartsList)
                     {
                         if (!part.m_partTr)
+                        {
                             continue;
+                        }
 
+                        // 親部位と一緒に切り離された子部位は集計しない。
                         if (part.m_partTr.GetComponentInParent<BaseTank>() == this)
                         {
                             cost += part.m_cost;
                         }
                     }
-                    m_rigidbody.mass = CalculateTankMass(cost);
+
+                    // 再計算結果が極端に小さい場合も、正の質量を設定する。
+                    m_rigidbody.mass = Mathf.Max(0.01f, CalculateTankMass(cost));
                 }
+
                 return true;
             }
 
-            // 砲塔は無敵にする 
+            // 砲塔は無敵にする
             if (collidedCollider.gameObject.GetComponentInParent<TurretPart>() != null)
             {
-                Debug.Log("[Damage] 砲塔は無敵 " + collidedCollider.name + " | T=" + Time.frameCount);
+                Debug.Log("[Damage] 砲塔は無敵 " + collidedCollider.name
+                    + " | T=" + Time.frameCount);
+
                 return false;
             }
 
-            Debug.Log("[Damage] 直撃!! " + collidedCollider.name + " | T=" + Time.frameCount);
+            Debug.Log("[Damage] 直撃!! " + collidedCollider.name
+                + " | T=" + Time.frameCount);
 
+            // 爆発エフェクト
+            GameObject explosionObj = Instantiate(
+                PrefabHolder.Instance.VfxTankDestroiedPrefab,
+                transform.position,
+                Quaternion.identity);
 
-            // 爆発エフェクト 
-            GameObject explosionObj = Instantiate(PrefabHolder.Instance.VfxTankDestroiedPrefab,
-                transform.position, Quaternion.identity);
-            explosionObj.transform.localScale = Vector3.one * DESTROIED_EXPLOSION_SCALE;
+            explosionObj.transform.localScale =
+                Vector3.one * DESTROIED_EXPLOSION_SCALE;
 
             // パラメータ
             m_lastDamageContactPoint = contactPoint;
             m_lastDamageRadius = damageRadius;
 
-            // 破壊 
+            // 破壊
             Finish(attackTeamNo);
 
             return true;
