@@ -286,6 +286,31 @@ namespace SXG2025
             }
         }
 
+
+        /// <summary>
+        /// 部品の再生成時に、計量用リストのTransform参照を更新する。
+        /// コスト・耐久値・部品種別など、登録済みの情報は変更しない。
+        /// </summary>
+        internal void ReplaceMeasuredPartTransform(
+            UnityEngine.Transform oldPartTr,
+            UnityEngine.Transform newPartTr)
+        {
+            if (oldPartTr == null || newPartTr == null)
+            {
+                return;
+            }
+
+            foreach (var part in m_tankPartsList)
+            {
+                if (part.m_partTr == oldPartTr)
+                {
+                    part.m_partTr = newPartTr;
+                }
+            }
+        }
+
+
+
         /// <summary>
         /// 回転ジョイントを紐づける 
         /// </summary>
